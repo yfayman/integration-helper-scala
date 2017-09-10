@@ -46,9 +46,10 @@ trait IntegrationMarshalling extends DefaultJsonProtocol {
   // Simplest case classes
   implicit val jobRecentShortMarshaller: RootJsonFormat[JobRecentStatus] = jsonFormat2(JobRecentStatus)
   implicit val jobAttributeMarshaller: RootJsonFormat[JobAttribute] = jsonFormat2(JobAttribute)
+  implicit val jobParamMarshaller:RootJsonFormat[JobParam] =jsonFormat2(JobParam)
   implicit val jobMessageMarshaller: RootJsonFormat[JobMessage] = jsonFormat2(JobMessage)
  // implicit val jobInstanceShortMarshaller: RootJsonFormat[JobInstanceShort] = jsonFormat4(JobInstanceShort)
-  implicit val jobActionMarshaller: RootJsonFormat[JobAction] = jsonFormat1(JobAction)
+  implicit val jobActionMarshaller: RootJsonFormat[JobAction] = jsonFormat2(JobAction)
 
   // rely on converters above
   implicit val integrationShortMarshaller: RootJsonFormat[IntegrationRecentStatus] = jsonFormat2(IntegrationRecentStatus)

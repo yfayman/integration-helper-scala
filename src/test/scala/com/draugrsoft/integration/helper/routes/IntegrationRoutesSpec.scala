@@ -34,7 +34,7 @@ class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTe
   val routes = new IntegrationTest
 
   "Integration Route" should {
-    
+
     "get /integration/integration1 responds with Ok status and correct data " in {
       Get("/" + routes.integration + "/integration1") ~> routes.integrationRoutes ~> check {
         status shouldBe StatusCodes.OK
@@ -55,8 +55,15 @@ class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTe
       }
     }
 
-    "patch /integration/intergration1 responds with Ok status" in {
-      val httpEntity = HttpEntity(ContentTypes.`application/json`, "{\"action\" : \"START\"}")
+    "patch /integration/intergration1 without params responds with Ok status" in {
+      val httpEntity = HttpEntity(ContentTypes.`application/json`, "{\"action\" : \"START\" }")
+      Patch("/integration/integration1", httpEntity) ~> routes.integrationRoutes ~> check {
+        status shouldBe StatusCodes.OK
+      }
+    }
+
+    "patch /integration/intergration1 with params responds with Ok status" in {
+      val httpEntity = HttpEntity(ContentTypes.`application/json`, "{\"action\" : \"START\" ,\"params\" : [ {\"name\":\"param1Name\", \"value\":\"param1Val\" }]}")
       Patch("/integration/integration1", httpEntity) ~> routes.integrationRoutes ~> check {
         status shouldBe StatusCodes.OK
       }

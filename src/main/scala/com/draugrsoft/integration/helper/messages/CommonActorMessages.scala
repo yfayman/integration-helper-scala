@@ -28,13 +28,16 @@ object CommonActorMessages {
   case class UpdateJobsRequest(action: JobActionEnum) // This is bound to API
 
   //This applies to a single job. Name included to allow MasterIntegrationActor to select the right MasterJobActor
-  case class UpdateJobRequest(name: String, action: JobActionEnum)
+  case class UpdateJobRequest(name: String, action: JobAction)
   //For getting current data
   case class JobStatusRequest(name: String)
   //For getting historical and current data
   case class JobStatiRequest(name: String)
   case object IntegrationStatusRequest
+  
+  // Stuff sent to jobs
+  case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
-  case class JobAction(action: JobActionEnum)
+  case class JobAction(action: JobActionEnum, params:Option[List[JobParam]])
 
 }

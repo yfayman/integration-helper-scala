@@ -34,7 +34,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, INITIALIZING))))
 
-      val startReq = JobAction(StartAction)
+      val startReq = JobAction(StartAction, None)
 
       Await.result(masterJob.ask(startReq), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.start.isDefined => assert(true)
@@ -46,7 +46,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
         case _ => assert(false)
       }
 
-      val stopReq = JobAction(StopAction)
+      val stopReq = JobAction(StopAction, None)
 
       Await.result(masterJob.ask(stopReq), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.end.isDefined => assert(true)

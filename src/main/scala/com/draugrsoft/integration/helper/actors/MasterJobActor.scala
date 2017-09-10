@@ -32,7 +32,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case HistoricalData(data) => {
       historicalData = data
     }
-    case JobAction(action) => {
+    case JobAction(action, params) => {
       action match {
         case StartAction => {
           if (currentData.status != RUNNING) {

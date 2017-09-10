@@ -97,7 +97,7 @@ trait IntegrationHelperConnector {
   def jobAction(integrationName: String, jobName: String, jobAction: JobAction): Future[Option[UpdateJobResponse]] = {
     integrationMap.get(integrationName).
       fold[Future[Option[UpdateJobResponse]]](Future.successful(None)) {
-        _.dispatcherActor.ask(UpdateJobRequest(jobName, jobAction.action)).
+        _.dispatcherActor.ask(UpdateJobRequest(jobName, jobAction)).
           mapTo[UpdateJobResponse].map(ujar => Some(ujar))
       }
   }
