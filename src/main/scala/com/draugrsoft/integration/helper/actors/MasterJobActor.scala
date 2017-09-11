@@ -23,7 +23,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case Right(ref)  => ref
   }
   // We initialize the job instance id to 0, because we don't know about historical data yet
-  var currentData: JobInstanceData = JobInstanceData(0, name, None, None, Nil, Nil, INITIALIZING)
+  var currentData: JobInstanceData = getInitStatus 
   var historicalData: List[JobInstanceData] = Nil
 
   def receive = runningState
@@ -32,18 +32,28 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case HistoricalData(data) => {
       historicalData = data
     }
-    case JobAction(action, params) => {
-      action match {
+    case ja: JobAction => {
+      ja.action match {
         case StartAction => {
+          if(currentData.status == COMPLETED){
+            historicalData = currentData :: historicalData
+            currentData = getInitStatus // reset this
+          }
           if (currentData.status != RUNNING) {
-            dispatcherActor ! action
-            currentData = currentData.copy(status = RUNNING, start = Some(System.currentTimeMillis()))
+            dispatcherActor ! ja
+            currentData = currentData.
+              copy(status = RUNNING,
+                start = Some(System.currentTimeMillis()),
+                params = ja.params.getOrElse(Nil) ::: currentData.params)
           }
         }
         case StopAction => {
           if (currentData.status == RUNNING) {
-            dispatcherActor ! action
-            currentData = currentData.copy(status = STOPPED, end = Some(System.currentTimeMillis()))
+            dispatcherActor ! ja
+            currentData = currentData.
+              copy(status = STOPPED,
+                end = Some(System.currentTimeMillis()),
+                params = ja.params.getOrElse(Nil) ::: currentData.params)
           }
         }
       }
@@ -54,7 +64,23 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
       sender ! JobStatusResponse(Some(currentData))
     }
     case jsr: JobStatiRequest => sender ! JobStatiResponse(currentData :: historicalData)
-    case _                    => ()
-  }
 
+    //Messages that come from dispatcher actor
+    case LogMessage(msg, level) =>
+      currentData = currentData.
+        copy(messages = JobMessage(msg, level) :: currentData.messages)
+    case LogAttribute(name, value) =>
+      currentData = currentData.copy(attributes = JobAttribute(name, value) :: currentData.attributes)
+    case SendResult(attributes, messages) => {
+      val jobMessages = messages.map { lm => JobMessage(lm.message, lm.level) }
+      currentData = currentData
+        .copy(end = Some(System.currentTimeMillis()),
+          status = COMPLETED,
+          attributes = attributes ::: currentData.attributes,
+          messages = jobMessages ::: currentData.messages)
+    }
+    case _ => ()
+  }
+  
+  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Nil, INITIALIZING)
 }

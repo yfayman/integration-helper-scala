@@ -137,7 +137,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
         assert(jid.status == INITIALIZING)
         assert(jid.start.isEmpty)
         assert(jid.messages.isEmpty)
-        assert(jid.attribute.isEmpty)
+        assert(jid.attributes.isEmpty)
       })
 
       val jobStatiResponseFutureTwo = mainAct.ask(JobStatiRequest("job that doesn't exist")).mapTo[JobStatiResponse]
