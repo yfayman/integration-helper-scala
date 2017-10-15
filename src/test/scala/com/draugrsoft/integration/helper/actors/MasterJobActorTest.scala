@@ -32,7 +32,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
 
       masterJob ! JobStatusRequest("test")
-      expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Nil, INITIALIZING))))
+      expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
 
       val startReq = JobAction(StartAction, None)
 
@@ -68,8 +68,8 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       // just the current data
       assert(statusResponse.data.tail.isEmpty)
 
-      masterJob ! HistoricalData(JobInstanceData(55, "test", None, None, Nil, Nil, Nil, COMPLETED)
-        :: JobInstanceData(43, "test", None, None, Nil, Nil, Nil, COMPLETED) :: Nil)
+      masterJob ! HistoricalData(JobInstanceData(55, "test", None, None, Nil, Nil, Map.empty, COMPLETED)
+        :: JobInstanceData(43, "test", None, None, Nil, Nil, Map.empty, COMPLETED) :: Nil)
 
       val statusResponseAfterFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponseAfter = Await.result(statusResponseAfterFuture, Duration.Inf)
@@ -89,9 +89,9 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
           assert(resultJobInstanceData.status == COMPLETED)
           assert(resultJobInstanceData.messages.size == 3) // 2 for params, 1 for result
           assert(!resultJobInstanceData.attributes.isEmpty)
-          val answerOpt = resultJobInstanceData.attributes.find { _.name == "answer" }
+          val answerOpt = resultJobInstanceData.attributes.get("answer") 
           assert(answerOpt.isDefined)
-          assert(answerOpt.get.value == "79") // we can add
+          assert(answerOpt.get == "79") // we can add
         }
         case _ => assert(false)
       }
@@ -122,9 +122,8 @@ class AddActor extends Actor {
   def receive = {
     case JobAction(action, params) => {
       if (params.isDefined) {
-        params.get.foreach { param => context.parent ! LogMessage(s"received $param.name | $param.value", INFO) }
+        params.get.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
         val sum = params.get.map { _.value.toInt }.sum
-        context.parent ! SendResult(List(JobAttribute("answer", sum.toString())), LogMessage("Done",INFO)::Nil)
       }
 
     }

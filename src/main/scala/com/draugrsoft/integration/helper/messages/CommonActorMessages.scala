@@ -12,11 +12,10 @@ import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
 object CommonActorMessages {
 
   /* Provided by Client Job that sits under the JobMasterActor */
-  case class JobInstanceData(id: Int, name: String, start: Option[Long], end: Option[Long], params:List[JobParam], messages: List[JobMessage], attributes: List[JobAttribute], status: JobStatusEnum)
-  case class JobMessage(msg: String, level: MessageLevelEnum)
-  case class JobAttribute(name: String, value: String)
-  case class HistoricalData(data: List[JobInstanceData])
+  case class JobInstanceData(id: Int, name: String, start: Option[Long], end: Option[Long], params: List[JobParam], messages: List[JobMessage], attributes: Map[String, String], status: JobStatusEnum)
 
+  // case class JobAttribute(name: String, value: String)
+  case class HistoricalData(data: List[JobInstanceData])
 
   case object JobNotFound
   case class UpdateJobResponse(data: JobInstanceData)
@@ -34,15 +33,15 @@ object CommonActorMessages {
   //For getting historical and current data
   case class JobStatiRequest(name: String)
   case object IntegrationStatusRequest
-  
+
   // Stuff sent to jobs
   case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
-  case class JobAction(action: JobActionEnum, params:Option[List[JobParam]])
-  
+  case class JobAction(action: JobActionEnum, params: Option[List[JobParam]])
+
   //Stuff sent to MasterJobActor from entrypointActor
-  case class LogMessage(message:String, level:MessageLevelEnum)
-  case class LogAttribute(name:String,value:String)
-  case class SendResult(attribute:List[JobAttribute], messages:List[LogMessage])
+  case class LogAttribute(name: String, value: String)
+  case class JobMessage(msg: String, level: MessageLevelEnum)
+  case class SendResult(attribute: Map[String, String], messages: List[JobMessage])
 
 }

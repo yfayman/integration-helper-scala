@@ -66,21 +66,20 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case jsr: JobStatiRequest => sender ! JobStatiResponse(currentData :: historicalData)
 
     //Messages that come from dispatcher actor
-    case LogMessage(msg, level) =>
+    case JobMessage(msg, level) =>
       currentData = currentData.
         copy(messages = JobMessage(msg, level) :: currentData.messages)
     case LogAttribute(name, value) =>
-      currentData = currentData.copy(attributes = JobAttribute(name, value) :: currentData.attributes)
+      currentData = currentData.copy(attributes =  currentData.attributes + (name -> value))
     case SendResult(attributes, messages) => {
-      val jobMessages = messages.map { lm => JobMessage(lm.message, lm.level) }
       currentData = currentData
         .copy(end = Some(System.currentTimeMillis()),
           status = COMPLETED,
-          attributes = attributes ::: currentData.attributes,
-          messages = jobMessages ::: currentData.messages)
+          attributes = currentData.attributes ++ attributes,
+          messages = messages ::: currentData.messages)
     }
     case _ => ()
   }
   
-  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Nil, INITIALIZING)
+  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING)
 }
