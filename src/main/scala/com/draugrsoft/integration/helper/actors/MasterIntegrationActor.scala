@@ -31,12 +31,13 @@ class MasterIntegrationActor(val integration: Integration) extends Actor {
 
   var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
     val jobMasterActor = job match {
-      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name))
-      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref, name))
+      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props,integration.persistanceActor, name))
+      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref,integration.persistanceActor, name))
     }
-
     JobMetaData(job, jobMasterActor, INITIALIZING)
-  }).groupBy { jmd => jmd.job.name }.mapValues { _.head }
+  }).groupBy { jmd => jmd.job.name }
+    .mapValues { _.head }
+
   val name = integration.name
 
   implicit val timeout = Timeout(5, TimeUnit.SECONDS)
@@ -69,7 +70,7 @@ class MasterIntegrationActor(val integration: Integration) extends Actor {
         jmd.jobMasterActor.ask(action).mapTo[UpdateJobResponse].map { updateResponse => requestor ! updateResponse }
       })
     }
-    case jsr : JobStatusRequest => {
+    case jsr: JobStatusRequest => {
       val requestor = sender
       jobMap.get(jsr.name).fold(requestor ! JobStatusResponse(None))(jmd => {
         val responseFuture = jmd.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
@@ -77,15 +78,14 @@ class MasterIntegrationActor(val integration: Integration) extends Actor {
       })
     }
 
-    case jsr:JobStatiRequest => {
+    case jsr: JobStatiRequest => {
       val requestor = sender()
-      
+
       jobMap.get(jsr.name).fold(requestor ! JobStatiResponse(Nil))(jmd => {
         val responseFuture = jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
         responseFuture.map { res => requestor ! res }
       })
     }
- 
 
     case _ => ()
   }

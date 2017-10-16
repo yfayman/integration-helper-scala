@@ -29,7 +29,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
 
     "respond to start/stop request" in {
 
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, None, "test"))
 
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
@@ -61,7 +61,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "aggregate historical data " in {
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props,None, "test"))
       val statusResponseFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponse = Await.result(statusResponseFuture, Duration.Inf)
 
@@ -77,7 +77,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "successfully receive and process requests from dispatcher " in {
-      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test"))
+      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props,None, "add test"))
       masterJob ! JobAction(StartAction, Some(JobParam("1", "4") :: JobParam("2","75") :: Nil))
       
       Thread.sleep(200)
@@ -87,7 +87,8 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
           assert(opt.isDefined)
           val resultJobInstanceData = opt.get
           assert(resultJobInstanceData.status == COMPLETED)
-          assert(resultJobInstanceData.messages.size == 3) // 2 for params, 1 for result
+          assert(resultJobInstanceData.messages.size == 2) // 2 for params
+          assert(resultJobInstanceData.attributes.size == 1) // 1 for result
           assert(!resultJobInstanceData.attributes.isEmpty)
           val answerOpt = resultJobInstanceData.attributes.get("answer") 
           assert(answerOpt.isDefined)
@@ -124,6 +125,7 @@ class AddActor extends Actor {
       if (params.isDefined) {
         params.get.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
         val sum = params.get.map { _.value.toInt }.sum
+        sender() ! SendResult(Map("answer" -> sum.toString), Nil)
       }
 
     }

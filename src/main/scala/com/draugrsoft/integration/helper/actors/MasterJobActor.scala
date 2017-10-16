@@ -9,11 +9,14 @@ import scala.util.Either
 
 object MasterJobActor {
 
-  def props(dispatcherProps: Props, name: String): Props = Props(classOf[MasterJobActor], Left(dispatcherProps), name)
-  def props(ref: ActorRef, name: String): Props = Props(classOf[MasterJobActor], Right(ref), name)
+  def props(dispatcherProps: Props, persistanceActor: Option[ActorRef], name: String): Props =
+    Props(classOf[MasterJobActor], Left(dispatcherProps), persistanceActor, name)
+    
+  def props(dispatcherRef: ActorRef, persistanceActor: Option[ActorRef], name: String): Props =
+    Props(classOf[MasterJobActor], Right(dispatcherRef), persistanceActor, name)
 }
 
-class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends Actor {
+class MasterJobActor(actorInfo: Either[Props, ActorRef], persistanceActor: Option[ActorRef], name: String) extends Actor {
 
   import MasterJobActor._
   import com.draugrsoft.integration.helper.messages.CommonActorMessages._
@@ -22,8 +25,8 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case Left(props) => context.actorOf(props)
     case Right(ref)  => ref
   }
-  // We initialize the job instance id to 0, because we don't know about historical data yet
-  var currentData: JobInstanceData = getInitStatus 
+
+  var currentData: JobInstanceData = getInitStatus
   var historicalData: List[JobInstanceData] = Nil
 
   def receive = runningState
@@ -35,7 +38,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     case ja: JobAction => {
       ja.action match {
         case StartAction => {
-          if(currentData.status == COMPLETED){
+          if (currentData.status == COMPLETED) {
             historicalData = currentData :: historicalData
             currentData = getInitStatus // reset this
           }
@@ -70,7 +73,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
       currentData = currentData.
         copy(messages = JobMessage(msg, level) :: currentData.messages)
     case LogAttribute(name, value) =>
-      currentData = currentData.copy(attributes =  currentData.attributes + (name -> value))
+      currentData = currentData.copy(attributes = currentData.attributes + (name -> value))
     case SendResult(attributes, messages) => {
       currentData = currentData
         .copy(end = Some(System.currentTimeMillis()),
@@ -80,6 +83,6 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends A
     }
     case _ => ()
   }
-  
+
   def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING)
 }
