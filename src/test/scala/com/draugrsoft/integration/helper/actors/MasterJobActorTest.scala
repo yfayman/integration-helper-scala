@@ -34,7 +34,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
 
-      val startReq = JobAction(StartAction, None)
+      val startReq = JobAction(StartAction, Nil)
 
       Await.result(masterJob.ask(startReq), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.start.isDefined => assert(true)
@@ -46,7 +46,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
         case _ => assert(false)
       }
 
-      val stopReq = JobAction(StopAction, None)
+      val stopReq = JobAction(StopAction, Nil)
 
       Await.result(masterJob.ask(stopReq), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.end.isDefined => assert(true)
@@ -78,7 +78,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
 
     "successfully receive and process requests from dispatcher " in {
       val masterJob = system.actorOf(MasterJobActor.props(AddActor.props,None, "add test"))
-      masterJob ! JobAction(StartAction, Some(JobParam("1", "4") :: JobParam("2","75") :: Nil))
+      masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2","75") :: Nil)
       
       Thread.sleep(200)
       
@@ -121,13 +121,10 @@ object AddActor {
 
 class AddActor extends Actor {
   def receive = {
-    case JobAction(action, params) => {
-      if (params.isDefined) {
-        params.get.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
-        val sum = params.get.map { _.value.toInt }.sum
+    case JobAction(action, params) => {     
+        params.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
+        val sum = params.map { _.value.toInt }.sum
         sender() ! SendResult(Map("answer" -> sum.toString), Nil)
-      }
-
     }
   }
 }

@@ -37,7 +37,7 @@ object CommonActorMessages {
   // Stuff sent to jobs
   case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
-  case class JobAction(action: JobActionEnum, params: Option[List[JobParam]])// This is Option[List] to allow for field to not exist in request
+  case class JobAction(action: JobActionEnum, params: List[JobParam])// This is Option[List] to allow for field to not exist in request
 
   //Stuff sent to MasterJobActor from entrypointActor
   case class LogAttribute(name: String, value: String)

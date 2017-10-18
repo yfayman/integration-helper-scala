@@ -61,7 +61,7 @@ class MasterIntegrationActor(val integration: Integration) extends Actor {
     }
     case UpdateJobsRequest(action) => {
       val requestor = sender()
-      val reply = Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, None)).mapTo[UpdateJobResponse] } }
+      val reply = Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, Nil)).mapTo[UpdateJobResponse] } }
       reply.map { items => requestor ! items.toList }
     }
     case UpdateJobRequest(jobName, action) => {

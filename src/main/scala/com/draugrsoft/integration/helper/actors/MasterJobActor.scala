@@ -47,7 +47,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], persistanceActor: Optio
             currentData = currentData.
               copy(status = RUNNING,
                 start = Some(System.currentTimeMillis()),
-                params = ja.params.getOrElse(Nil) ::: currentData.params)
+                params = ja.params ::: currentData.params)
           }
         }
         case StopAction => {
@@ -56,7 +56,7 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], persistanceActor: Optio
             currentData = currentData.
               copy(status = STOPPED,
                 end = Some(System.currentTimeMillis()),
-                params = ja.params.getOrElse(Nil) ::: currentData.params)
+                params = ja.params ::: currentData.params)
           }
         }
       }

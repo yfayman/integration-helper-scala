@@ -52,11 +52,11 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       assert(integrationStatusOne.jobs.size == 1)
       assert(integrationStatusOne.jobs(0).name == "test jerb")
 
-      Await.result(mainAct.ask(UpdateJobRequest("test jerb", JobAction(StartAction,None))), Duration.Inf) match {
+      Await.result(mainAct.ask(UpdateJobRequest("test jerb", JobAction(StartAction,Nil))), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.start.isDefined => assert(true)
         case _ => assert(false)
       }
-      mainAct ! UpdateJobRequest("made up jerb", JobAction(StartAction,None))
+      mainAct ! UpdateJobRequest("made up jerb", JobAction(StartAction,Nil))
       expectMsg(JobNotFound)
 
       // Make sure that the started job is running

@@ -42,18 +42,39 @@ trait IntegrationMarshalling extends DefaultJsonProtocol {
    * Order is important here. If a marshaller, depends on other marshallers, it must come after.
    * Otherwise there will be a cryptic NPE
    */
-  
+
   // Simplest case classes
   implicit val jobRecentShortMarshaller: RootJsonFormat[JobRecentStatus] = jsonFormat2(JobRecentStatus)
-  implicit val jobParamMarshaller:RootJsonFormat[JobParam] =jsonFormat2(JobParam)
+  implicit val jobParamMarshaller: RootJsonFormat[JobParam] = jsonFormat2(JobParam)
   implicit val jobMessageMarshaller: RootJsonFormat[JobMessage] = jsonFormat2(JobMessage)
-  implicit val jobActionMarshaller: RootJsonFormat[JobAction] = jsonFormat2(JobAction)
+
+  //case class JobAction(action: JobActionEnum, params: List[JobParam])
+  implicit object JobActionFormat extends RootJsonFormat[JobAction] {
+    def write(ja: JobAction): JsObject = {
+      val jsParams = ja.params.map { p => JsObject("name" -> JsString(p.name), "value" -> JsString(p.value)) }
+      JsObject(
+        "action" -> JsString(ja.action),
+        "params" -> JsArray(jsParams))
+    }
+
+    def read(js: JsValue): JobAction = js.asJsObject.getFields("action", "params") match {
+      case Seq(JsString(action), JsArray(params)) => {
+        val fixedParams = params.map { jsv => jsv.asJsObject.getFields("name","value") match {
+          case Seq(JsString(name),JsString(value)) => JobParam(name,value)         
+        }}
+        
+        JobAction(action, fixedParams.toList)
+      }
+      case Seq(JsString(action)) => JobAction(action,Nil)
+      case _ => throw new DeserializationException("name/value expected")
+    }
+
+  }
 
   // rely on converters above
   implicit val integrationShortMarshaller: RootJsonFormat[IntegrationRecentStatus] = jsonFormat2(IntegrationRecentStatus)
   implicit val jobDataMarshaller: RootJsonFormat[JobInstanceData] = jsonFormat8(JobInstanceData)
- // implicit val jobShortMarshaller: RootJsonFormat[JobShort] = jsonFormat2(JobShort)
-  
+
   // rely on converts above
   implicit val updateJobActionResponseMarshaller: RootJsonFormat[UpdateJobResponse] = jsonFormat1(UpdateJobResponse)
 
