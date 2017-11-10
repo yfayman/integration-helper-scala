@@ -21,7 +21,7 @@ import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 
 trait IntegrationHelperConnector {
-
+  
   /**
    *  Things that need to be overridden
    */

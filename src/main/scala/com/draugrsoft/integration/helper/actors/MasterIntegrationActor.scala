@@ -17,7 +17,7 @@ object MasterIntegrationActor {
 
 }
 
-class MasterIntegrationActor(val integration: Integration) extends Actor {
+class MasterIntegrationActor(integration: Integration) extends Actor {
 
   import MasterIntegrationActor._
   import com.draugrsoft.integration.helper.messages.CommonActorMessages._
@@ -31,8 +31,8 @@ class MasterIntegrationActor(val integration: Integration) extends Actor {
 
   var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
     val jobMasterActor = job match {
-      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props,integration.persistanceActor, name))
-      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref,integration.persistanceActor, name))
+      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name, integration.persist))
+      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref, name, integration.persist))
     }
     JobMetaData(job, jobMasterActor, INITIALIZING)
   }).groupBy { jmd => jmd.job.name }

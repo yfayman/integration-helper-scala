@@ -15,6 +15,7 @@ import scala.concurrent.duration.Duration
 import akka.pattern.ask
 import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
+import com.draugsoft.integration.helper.persist.Dummy
 
 class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     with WordSpecLike
@@ -29,7 +30,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
 
     "respond to start/stop request" in {
 
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, None, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", new Dummy))
 
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
@@ -61,7 +62,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "aggregate historical data " in {
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props,None, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", new Dummy))
       val statusResponseFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponse = Await.result(statusResponseFuture, Duration.Inf)
 
@@ -77,7 +78,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "successfully receive and process requests from dispatcher " in {
-      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props,None, "add test"))
+      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test", new Dummy))
       masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2","75") :: Nil)
       
       Thread.sleep(200)

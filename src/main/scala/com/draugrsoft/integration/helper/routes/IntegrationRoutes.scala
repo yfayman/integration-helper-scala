@@ -37,7 +37,6 @@ import com.draugrsoft.integraiton.helper.marshallers.IntegrationMarshalling
  */
 trait IntegrationRoutes extends IntegrationHelperConnector with IntegrationMarshalling {
 
-
   import StatusCodes._
 
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._

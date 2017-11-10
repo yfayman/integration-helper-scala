@@ -16,6 +16,7 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import akka.actor._
 import com.draugrsoft.integration.helper.routes.IntegrationRoutes
 import com.draugrsoft.integration.helper.routes.BaseRoutes
+import com.typesafe.config.ConfigFactory
 
 object WebServer extends Directives with IntegrationRoutes {
   
@@ -25,8 +26,7 @@ object WebServer extends Directives with IntegrationRoutes {
 
   override def integrations: List[Integration] = ints :: Nil
 
-  
-
+ 
   override implicit val timeout = Timeout(5, TimeUnit.SECONDS)
 
   override implicit val system = ActorSystem("http-system")
@@ -37,10 +37,17 @@ object WebServer extends Directives with IntegrationRoutes {
   def main(args: Array[String]) {
 
     // needed for the future flatMap/onComplete in the end
+    
+    val config = ConfigFactory.load()
+    val wsConfig = config.getConfig("ws-config")
+    val port = wsConfig.getInt("port")
+    val uri = wsConfig.getString("uri")
 
-    val bindingFuture = Http().bindAndHandle(routes, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(routes, uri, port)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://$uri:$port/\nPress RETURN to stop...")
+
+    
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

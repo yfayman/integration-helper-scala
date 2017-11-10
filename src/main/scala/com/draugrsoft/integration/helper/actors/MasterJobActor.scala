@@ -6,17 +6,18 @@ import akka.actor.ActorRef
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.constants.JobAction._
 import scala.util.Either
+import com.draugsoft.integration.helper.persist.Persist
 
 object MasterJobActor {
 
-  def props(dispatcherProps: Props, persistanceActor: Option[ActorRef], name: String): Props =
-    Props(classOf[MasterJobActor], Left(dispatcherProps), persistanceActor, name)
-    
-  def props(dispatcherRef: ActorRef, persistanceActor: Option[ActorRef], name: String): Props =
-    Props(classOf[MasterJobActor], Right(dispatcherRef), persistanceActor, name)
+  def props(dispatcherProps: Props, name: String, persist: Persist): Props =
+    Props(classOf[MasterJobActor], Left(dispatcherProps), name, persist)
+
+  def props(dispatcherRef: ActorRef, name: String, persist: Persist): Props =
+    Props(classOf[MasterJobActor], Right(dispatcherRef), name, persist)
 }
 
-class MasterJobActor(actorInfo: Either[Props, ActorRef], persistanceActor: Option[ActorRef], name: String) extends Actor {
+class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, persist: Persist) extends Actor {
 
   import MasterJobActor._
   import com.draugrsoft.integration.helper.messages.CommonActorMessages._
