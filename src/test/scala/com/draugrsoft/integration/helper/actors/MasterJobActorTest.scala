@@ -15,7 +15,6 @@ import scala.concurrent.duration.Duration
 import akka.pattern.ask
 import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
-import com.draugsoft.integration.helper.persist.Dummy
 
 class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     with WordSpecLike
@@ -29,8 +28,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
   "A MasterJobActor" must {
 
     "respond to start/stop request" in {
-
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", new Dummy))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
 
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
@@ -62,7 +60,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "aggregate historical data " in {
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", new Dummy))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
       val statusResponseFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponse = Await.result(statusResponseFuture, Duration.Inf)
 
@@ -78,7 +76,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "successfully receive and process requests from dispatcher " in {
-      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test", new Dummy))
+      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test"))
       masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2","75") :: Nil)
       
       Thread.sleep(200)
@@ -87,13 +85,13 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
         case JobStatusResponse(opt) => {
           assert(opt.isDefined)
           val resultJobInstanceData = opt.get
-          assert(resultJobInstanceData.status == COMPLETED)
-          assert(resultJobInstanceData.messages.size == 2) // 2 for params
-          assert(resultJobInstanceData.attributes.size == 1) // 1 for result
+          assertResult(COMPLETED)(resultJobInstanceData.status)
+          assertResult(2)(resultJobInstanceData.messages.size) // 2 for params
+          assertResult(1)(resultJobInstanceData.attributes.size) // 1 for result
           assert(!resultJobInstanceData.attributes.isEmpty)
           val answerOpt = resultJobInstanceData.attributes.get("answer") 
           assert(answerOpt.isDefined)
-          assert(answerOpt.get == "79") // we can add
+          assertResult("79")(answerOpt.get)
         }
         case _ => assert(false)
       }

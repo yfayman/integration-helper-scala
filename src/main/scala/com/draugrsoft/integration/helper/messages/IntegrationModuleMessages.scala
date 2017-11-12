@@ -4,8 +4,10 @@ import akka.actor.ActorRef
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import akka.actor.Props
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
-import com.draugsoft.integration.helper.persist.Persist
-import com.draugsoft.integration.helper.persist.Dummy
+import com.typesafe.config.Config
+import com.draugrsoft.integration.helper.store.DataStore
+import com.draugrsoft.integration.helper.messages.CommonActorMessages.HistoricalData
+import com.draugrsoft.integration.helper.store.DataStore.DefaultJobInstanceDataStore
 
 object IntegrationModuleMessages {
 
@@ -14,7 +16,7 @@ object IntegrationModuleMessages {
    */
   case class IntegrationMetaData(integration: Integration, dispatcherActor: ActorRef)
   case class JobMetaData(job: Job, jobMasterActor: ActorRef, status: JobStatusEnum)
-  case class Integration(name: String, jobs: List[Job], implicit val persist:Persist = new Dummy)
+  case class Integration(name: String, jobs: List[Job], store: DataStore = DefaultJobInstanceDataStore)
 
   /*
    * dispatcherPros - the main entry point for the job

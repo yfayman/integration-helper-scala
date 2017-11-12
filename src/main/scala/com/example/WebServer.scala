@@ -21,6 +21,7 @@ import com.typesafe.config.ConfigFactory
 object WebServer extends Directives with IntegrationRoutes {
   
   import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
+  import com.draugrsoft.integration.helper.store.DataStore._
   
   val ints = Integration("integration1", JobWithProps("jerbOne",DummyJobActor.props) :: JobWithProps("jerbTwo", DummyJobActor.props) :: Nil)
 

@@ -49,8 +49,8 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
 
       val statusOneFuture = mainAct.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
       val integrationStatusOne = Await.result(statusOneFuture, Duration.Inf)
-      assert(integrationStatusOne.jobs.size == 1)
-      assert(integrationStatusOne.jobs(0).name == "test jerb")
+      assertResult(1)(integrationStatusOne.jobs.size)
+      assertResult("test jerb")(integrationStatusOne.jobs(0).name)
 
       Await.result(mainAct.ask(UpdateJobRequest("test jerb", JobAction(StartAction,Nil))), Duration.Inf) match {
         case UpdateJobResponse(jid) if jid.start.isDefined => assert(true)
@@ -62,8 +62,9 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       // Make sure that the started job is running
       val statusTwoFuture = mainAct.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
       val integrationStatusTwo = Await.result(statusTwoFuture, Duration.Inf)
-      assert(integrationStatusTwo.jobs.size == 1)
-      assert(integrationStatusTwo.jobs(0).name == "test jerb")
+      assertResult(1)(integrationStatusTwo.jobs.size)
+      assertResult("test jerb")(integrationStatusTwo.jobs(0).name)
+
 
     }
 
@@ -74,7 +75,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       val statusOneFuture = mainAct.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
       val integrationStatusOne = Await.result(statusOneFuture, Duration.Inf)
 
-      assert(integrationStatusOne.jobs.size == 2)
+      assertResult(2)(integrationStatusOne.jobs.size )
 
     }
 
@@ -106,7 +107,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       assert(updateJobResponse.nonEmpty)
       updateJobResponse.foreach { ujr =>
         {
-          assert(ujr.data.status == RUNNING)
+          assertResult(RUNNING)(ujr.data.status)
           assert(ujr.data.start.isDefined)
           assert(ujr.data.end.isEmpty)
         }
@@ -118,7 +119,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       assert(updateJobResponse2.nonEmpty)
       updateJobResponse2.foreach { ujr =>
         {
-          assert(ujr.data.status == STOPPED)
+          assertResult(STOPPED)(ujr.data.status)
           assert(ujr.data.start.isDefined)
           assert(ujr.data.end.isDefined)
         }
@@ -134,7 +135,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       val jobStatiResponseOne = Await.result(jobStatiResponseFutureOne, Duration.Inf)
       assert(jobStatiResponseOne.data.nonEmpty)
       jobStatiResponseOne.data.foreach(jid => {
-        assert(jid.status == INITIALIZING)
+        assertResult(INITIALIZING)(jid.status)
         assert(jid.start.isEmpty)
         assert(jid.messages.isEmpty)
         assert(jid.attributes.isEmpty)
@@ -147,7 +148,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       val jobStatusResponseFuture = mainAct.ask(JobStatusRequest("test jerb")).mapTo[JobStatusResponse]
       val jobStatusResponse = Await.result(jobStatusResponseFuture, Duration.Inf)
       assert(jobStatusResponse.data.isDefined)
-      assert(jobStatusResponse.data.get.status == INITIALIZING)
+      assertResult(INITIALIZING)(jobStatusResponse.data.get.status)
     }
 
   }
