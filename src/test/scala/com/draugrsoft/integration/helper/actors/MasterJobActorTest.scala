@@ -1,13 +1,10 @@
 package com.draugrsoft.integration.helper.actors
 
 import org.scalatest.{ WordSpecLike, MustMatchers }
-import akka.testkit.TestKit
+import akka.testkit._
 import akka.actor._
-import akka.testkit.TestActorRef
 import scala.concurrent.duration.FiniteDuration
 import java.util.concurrent.TimeUnit
-import akka.testkit.ImplicitSender
-import akka.testkit.DefaultTimeout
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.draugrsoft.integration.helper.constants.JobAction._
@@ -15,6 +12,7 @@ import scala.concurrent.duration.Duration
 import akka.pattern.ask
 import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
+import com.draugrsoft.integration.helper.store.DataStore
 
 class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     with WordSpecLike
@@ -27,8 +25,10 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
 
   "A MasterJobActor" must {
 
+    val dataStoreActor = system.actorOf(MasterDataActor.props(DataStore.DefaultJobInstanceDataStore))
+
     "respond to start/stop request" in {
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", dataStoreActor))
 
       masterJob ! JobStatusRequest("test")
       expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
@@ -60,7 +60,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "aggregate historical data " in {
-      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test"))
+      val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", dataStoreActor))
       val statusResponseFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponse = Await.result(statusResponseFuture, Duration.Inf)
 
@@ -76,12 +76,12 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "successfully receive and process requests from dispatcher " in {
-      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test"))
-      masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2","75") :: Nil)
-      
+      val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test", dataStoreActor))
+      masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2", "75") :: Nil)
+
       Thread.sleep(200)
-      
-      Await.result(masterJob.ask(JobStatusRequest("add test")), Duration.Inf) match { 
+
+      Await.result(masterJob.ask(JobStatusRequest("add test")), Duration.Inf) match {
         case JobStatusResponse(opt) => {
           assert(opt.isDefined)
           val resultJobInstanceData = opt.get
@@ -89,13 +89,13 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
           assertResult(2)(resultJobInstanceData.messages.size) // 2 for params
           assertResult(1)(resultJobInstanceData.attributes.size) // 1 for result
           assert(!resultJobInstanceData.attributes.isEmpty)
-          val answerOpt = resultJobInstanceData.attributes.get("answer") 
+          val answerOpt = resultJobInstanceData.attributes.get("answer")
           assert(answerOpt.isDefined)
           assertResult("79")(answerOpt.get)
         }
         case _ => assert(false)
       }
-      
+
     }
   }
 }
@@ -120,10 +120,10 @@ object AddActor {
 
 class AddActor extends Actor {
   def receive = {
-    case JobAction(action, params) => {     
-        params.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
-        val sum = params.map { _.value.toInt }.sum
-        sender() ! SendResult(Map("answer" -> sum.toString), Nil)
+    case JobAction(action, params) => {
+      params.foreach { param => context.parent ! JobMessage(s"received $param.name | $param.value", INFO) }
+      val sum = params.map { _.value.toInt }.sum
+      sender() ! SendResult(Map("answer" -> sum.toString), Nil)
     }
   }
 }

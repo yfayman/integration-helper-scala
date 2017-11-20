@@ -1,30 +1,17 @@
 package com.draugrsoft.integration.helper.actors
 
 import org.scalatest.{ WordSpecLike, MustMatchers }
-import akka.testkit.TestKit
+import akka.testkit._
 import akka.actor._
-import akka.testkit.TestActorRef
 import scala.concurrent.duration.FiniteDuration
-
 import java.util.concurrent.TimeUnit
-
-import akka.testkit.ImplicitSender
-import akka.testkit.DefaultTimeout
-
 import com.draugrsoft.integration.helper.actors.MasterJobActor._
-
 import akka.pattern.ask
 import scala.concurrent.Await
-
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
-
 import scala.concurrent.duration.Duration
-
 import com.draugrsoft.integration.helper.constants.JobStatus._
-
-import akka.testkit.CallingThreadDispatcher
-
 import com.draugrsoft.integration.helper.constants.JobAction.StartAction
 import com.draugrsoft.integration.helper.routes.DummyJobActor
 import com.draugrsoft.integration.helper.constants.JobAction.StopAction

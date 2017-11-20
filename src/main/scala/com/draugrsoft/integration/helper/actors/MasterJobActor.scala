@@ -9,14 +9,14 @@ import scala.util.Either
 
 object MasterJobActor {
 
-  def props(dispatcherProps: Props, name: String): Props =
-    Props(classOf[MasterJobActor], Left(dispatcherProps), name)
+  def props(dispatcherProps: Props, name: String, dataStoreActor:ActorRef): Props =
+    Props(classOf[MasterJobActor], Left(dispatcherProps), name, dataStoreActor)
 
-  def props(dispatcherRef: ActorRef, name: String): Props =
-    Props(classOf[MasterJobActor], Right(dispatcherRef), name)
+  def props(dispatcherRef: ActorRef, name: String, dataStoreActor:ActorRef): Props =
+    Props(classOf[MasterJobActor], Right(dispatcherRef), name, dataStoreActor)
 }
 
-class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String) extends Actor {
+class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor:ActorRef) extends Actor {
 
   import MasterJobActor._
   import com.draugrsoft.integration.helper.messages.CommonActorMessages._

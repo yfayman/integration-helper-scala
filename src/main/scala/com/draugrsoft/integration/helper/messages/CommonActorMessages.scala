@@ -37,11 +37,22 @@ object CommonActorMessages {
   // Stuff sent to jobs
   case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
-  case class JobAction(action: JobActionEnum, params: List[JobParam])// This is Option[List] to allow for field to not exist in request
+  case class JobAction(action: JobActionEnum, params: List[JobParam]) // This is Option[List] to allow for field to not exist in request
 
   //Stuff sent to MasterJobActor from entrypointActor
   case class LogAttribute(name: String, value: String)
   case class JobMessage(msg: String, level: MessageLevelEnum)
   case class SendResult(attribute: Map[String, String], messages: List[JobMessage])
 
+  // Stuff sent to MasterDataActor
+  case class SaveDataRequest(data: JobInstanceData)
+  case class SaveDataResponse(success: Boolean)
+  case object GetHistoricalInfoRequest
+  case class GetHistoricalInfoResponse(historicalData: List[JobInstanceData])
+
 }
+
+/*
+  def create(data: HistoricalData): Future[Boolean]
+  def read: Future[HistoricalData]
+*/

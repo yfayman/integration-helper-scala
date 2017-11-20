@@ -29,11 +29,14 @@ class MasterIntegrationActor(integration: Integration) extends Actor {
    * JobMetaData contains information regarding the client actor, mastor actor and current status
    */
 
+  val dataStoreRef = context.actorOf(MasterDataActor.props(integration.store))
+
   var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
     val jobMasterActor = job match {
-      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name))
-      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref, name))
+      case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name, dataStoreRef))
+      case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref, name, dataStoreRef))
     }
+
     JobMetaData(job, jobMasterActor, INITIALIZING)
   }).groupBy { jmd => jmd.job.name }
     .mapValues { _.head }
