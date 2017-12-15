@@ -4,16 +4,27 @@ import scala.concurrent.Future
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.typesafe.config.Config
 
-object DataStore {
+/**
+ * Stores everything in a hashmap
+ */
+object DefaultJobInstanceDataStore extends DataStore {
 
-  object DefaultJobInstanceDataStore extends DataStore {
+  override implicit val configOpt = None
 
-    override implicit val configOpt = None
+  val mutableMap: scala.collection.mutable.Map[Int, JobInstanceData] = scala.collection.mutable.Map()
 
-    override def create(hd: JobInstanceData): Future[Boolean] = Future.successful(true)
-    override def read: Future[HistoricalData] = Future.successful(HistoricalData(Nil))
+  def create(data: JobInstanceData): Future[Boolean] = {
+    mutableMap += (data.id -> data)
+    Future.successful(true)
+  }
+  def read: Future[HistoricalData] = {
+    val data = mutableMap.values.toList
+    Future.successful(HistoricalData(data))
   }
 
+  def clear = {
+    mutableMap.clear()
+  }
 }
 
 trait DataStore {

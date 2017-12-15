@@ -1,15 +1,12 @@
 package com.draugrsoft.integraiton.helper.marshallers
 
 import spray.json._
+import com.draugrsoft.integration.helper.constants.MessageLevel._
+import com.draugrsoft.integration.helper.constants.JobStatus._
+import com.draugrsoft.integration.helper.constants.JobAction._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
-import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
-import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
 
 trait IntegrationMarshalling extends DefaultJsonProtocol {
-
-  import com.draugrsoft.integration.helper.constants.MessageLevel._
-  import com.draugrsoft.integration.helper.constants.JobStatus._
-  import com.draugrsoft.integration.helper.constants.JobAction._
 
   implicit object MessageLevelEnumFormat extends RootJsonFormat[MessageLevelEnum] {
     def write(ml: MessageLevelEnum): JsString = JsString(ml)
@@ -59,14 +56,16 @@ trait IntegrationMarshalling extends DefaultJsonProtocol {
 
     def read(js: JsValue): JobAction = js.asJsObject.getFields("action", "params") match {
       case Seq(JsString(action), JsArray(params)) => {
-        val fixedParams = params.map { jsv => jsv.asJsObject.getFields("name","value") match {
-          case Seq(JsString(name),JsString(value)) => JobParam(name,value)         
-        }}
-        
+        val fixedParams = params.map { jsv =>
+          jsv.asJsObject.getFields("name", "value") match {
+            case Seq(JsString(name), JsString(value)) => JobParam(name, value)
+          }
+        }
+
         JobAction(action, fixedParams.toList)
       }
-      case Seq(JsString(action)) => JobAction(action,Nil)
-      case _ => throw new DeserializationException("name/value expected")
+      case Seq(JsString(action)) => JobAction(action, Nil)
+      case _                     => throw new DeserializationException("name/value expected")
     }
 
   }

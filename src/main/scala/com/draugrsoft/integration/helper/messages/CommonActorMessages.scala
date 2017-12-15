@@ -51,8 +51,3 @@ object CommonActorMessages {
   case class GetHistoricalInfoResponse(historicalData: List[JobInstanceData])
 
 }
-
-/*
-  def create(data: HistoricalData): Future[Boolean]
-  def read: Future[HistoricalData]
-*/

@@ -4,12 +4,12 @@ import akka.actor.Actor
 import akka.actor.Props
 import akka.actor.ActorRef
 import akka.pattern.ask
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
 import scala.language.postfixOps
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import scala.concurrent.Future
-import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages.Integration
+import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
+import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+import akka.event.Logging
 
 object MasterIntegrationActor {
 
@@ -17,20 +17,23 @@ object MasterIntegrationActor {
 
 }
 
-class MasterIntegrationActor(integration: Integration) extends Actor {
+class MasterIntegrationActor(integration: Integration) extends Actor 
+with FiveSecondTimeout 
+with ActorDispatcherExecutionContext{
 
   import MasterIntegrationActor._
-  import com.draugrsoft.integration.helper.messages.CommonActorMessages._
-  import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
+  
+  val log = Logging(context.system, this)
 
+  val dataStoreRef = context.actorOf(MasterDataActor.props(integration.store))
+
+  
+  
   /**
    * name -> JobMetaData
    *
    * JobMetaData contains information regarding the client actor, mastor actor and current status
    */
-
-  val dataStoreRef = context.actorOf(MasterDataActor.props(integration.store))
-
   var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
     val jobMasterActor = job match {
       case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name, dataStoreRef))
@@ -42,9 +45,6 @@ class MasterIntegrationActor(integration: Integration) extends Actor {
     .mapValues { _.head }
 
   val name = integration.name
-
-  implicit val timeout = Timeout(5, TimeUnit.SECONDS)
-  implicit val ec = context.dispatcher
 
   def receive = runningState
 

@@ -13,21 +13,25 @@ import akka.pattern.ask
 import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.store.DataStore
+import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
+import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 
 class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
-    with WordSpecLike
-    with MustMatchers
-    with ImplicitSender
-    with DefaultTimeout
-    with StopSystemAfterAll {
+  with WordSpecLike
+  with MustMatchers
+  with ImplicitSender
+  with DefaultTimeout
+  with StopSystemAfterAll {
 
   import MasterJobActor._
 
   "A MasterJobActor" must {
 
-    val dataStoreActor = system.actorOf(MasterDataActor.props(DataStore.DefaultJobInstanceDataStore))
+    val dataStoreActor = system.actorOf(MasterDataActor.props(DefaultJobInstanceDataStore))
 
     "respond to start/stop request" in {
+      DefaultJobInstanceDataStore.clear
+
       val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", dataStoreActor))
 
       masterJob ! JobStatusRequest("test")
@@ -60,6 +64,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "aggregate historical data " in {
+      DefaultJobInstanceDataStore.clear
       val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", dataStoreActor))
       val statusResponseFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponse = Await.result(statusResponseFuture, Duration.Inf)
@@ -76,6 +81,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "successfully receive and process requests from dispatcher " in {
+      DefaultJobInstanceDataStore.clear
       val masterJob = system.actorOf(MasterJobActor.props(AddActor.props, "add test", dataStoreActor))
       masterJob ! JobAction(StartAction, JobParam("1", "4") :: JobParam("2", "75") :: Nil)
 

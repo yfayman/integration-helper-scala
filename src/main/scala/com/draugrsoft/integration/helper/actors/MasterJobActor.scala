@@ -6,20 +6,30 @@ import akka.actor.ActorRef
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.constants.JobAction._
 import scala.util.Either
+import akka.pattern.ask
+import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
+import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+import akka.event.Logging
 
 object MasterJobActor {
 
-  def props(dispatcherProps: Props, name: String, dataStoreActor:ActorRef): Props =
+  def props(dispatcherProps: Props, name: String, dataStoreActor: ActorRef): Props =
     Props(classOf[MasterJobActor], Left(dispatcherProps), name, dataStoreActor)
 
-  def props(dispatcherRef: ActorRef, name: String, dataStoreActor:ActorRef): Props =
+  def props(dispatcherRef: ActorRef, name: String, dataStoreActor: ActorRef): Props =
     Props(classOf[MasterJobActor], Right(dispatcherRef), name, dataStoreActor)
 }
 
-class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor:ActorRef) extends Actor {
+class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor: ActorRef) extends Actor
+  with ActorDispatcherExecutionContext
+  with FiveSecondTimeout {
 
   import MasterJobActor._
-  import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+
+  val log = Logging(context.system, this)
+  val getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING)
+
+  log.info(s"Master Job Actor for $name started")
 
   val dispatcherActor = actorInfo match {
     case Left(props) => context.actorOf(props)
@@ -27,25 +37,28 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStore
   }
 
   var currentData: JobInstanceData = getInitStatus
-  var historicalData: List[JobInstanceData] = Nil
+  //var historicalData: List[JobInstanceData] = Nil
 
   def receive = runningState
 
   def runningState: PartialFunction[Any, Unit] = {
-    case HistoricalData(data) => {
-      historicalData = data
+     case HistoricalData(data) => {
+       data.foreach(jid => dataStoreActor ! SaveDataRequest(jid))
     }
     case ja: JobAction => {
       ja.action match {
         case StartAction => {
           if (currentData.status == COMPLETED) {
-            historicalData = currentData :: historicalData
+            //   historicalData = currentData :: historicalData
+            dataStoreActor ! SaveDataRequest(currentData)
+
             currentData = getInitStatus // reset this
           }
           if (currentData.status != RUNNING) {
             dispatcherActor ! ja
             currentData = currentData.
-              copy(status = RUNNING,
+              copy(
+                status = RUNNING,
                 start = Some(System.currentTimeMillis()),
                 params = ja.params ::: currentData.params)
           }
@@ -54,7 +67,8 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStore
           if (currentData.status == RUNNING) {
             dispatcherActor ! ja
             currentData = currentData.
-              copy(status = STOPPED,
+              copy(
+                status = STOPPED,
                 end = Some(System.currentTimeMillis()),
                 params = ja.params ::: currentData.params)
           }
@@ -66,7 +80,12 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStore
     case jsr: JobStatusRequest => {
       sender ! JobStatusResponse(Some(currentData))
     }
-    case jsr: JobStatiRequest => sender ! JobStatiResponse(currentData :: historicalData)
+    case jsr: JobStatiRequest => {
+      val sendTo = sender()
+     dataStoreActor.ask(GetHistoricalInfoRequest).mapTo[GetHistoricalInfoResponse]
+        .map(res => sendTo ! JobStatiResponse(currentData :: res.historicalData))
+   //    sender ! JobStatiResponse(currentData :: Nil)
+    }
 
     //Messages that come from dispatcher actor
     case JobMessage(msg, level) =>
@@ -76,13 +95,12 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStore
       currentData = currentData.copy(attributes = currentData.attributes + (name -> value))
     case SendResult(attributes, messages) => {
       currentData = currentData
-        .copy(end = Some(System.currentTimeMillis()),
+        .copy(
+          end = Some(System.currentTimeMillis()),
           status = COMPLETED,
           attributes = currentData.attributes ++ attributes,
           messages = messages ::: currentData.messages)
     }
     case _ => ()
   }
-
-  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING)
 }

@@ -4,15 +4,18 @@ import akka.actor.Actor
 import akka.actor.Props
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+import scala.util.{ Success, Failure }
+import akka.event.Logging
 
 object MasterDataActor {
-  def props(dataStore:DataStore):Props = Props(classOf[MasterDataActor],dataStore)
+  def props(dataStore: DataStore): Props = Props(classOf[MasterDataActor], dataStore)
 }
 
-class MasterDataActor(dataStore:DataStore) extends Actor{
-  
-  implicit val ec = context.dispatcher
-  
+class MasterDataActor(dataStore: DataStore) extends Actor
+  with ActorDispatcherExecutionContext {
+
+  val log = Logging(context.system, this)
+
   def receive = {
     case SaveDataRequest(data) => {
       val sendTo = sender
@@ -20,7 +23,11 @@ class MasterDataActor(dataStore:DataStore) extends Actor{
     }
     case GetHistoricalInfoRequest => {
       val sendTo = sender
-      dataStore.read.onSuccess({case HistoricalData(data) => sendTo ! GetHistoricalInfoResponse(data) })
+      // dataStore.read.onSuccess({case HistoricalData(data) => sendTo ! GetHistoricalInfoResponse(data) })
+      dataStore.read.onComplete({
+        case Success(hd) => sendTo ! GetHistoricalInfoResponse(hd.data)
+        case Failure(e)  => sendTo ! akka.actor.Status.Failure(e)
+      })
     }
     case _ =>
   }

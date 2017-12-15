@@ -8,7 +8,6 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import akka.actor._
-import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -31,16 +30,13 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.constants.JobAction._
 import com.draugrsoft.integration.helper.connector.IntegrationHelperConnector
 import com.draugrsoft.integraiton.helper.marshallers.IntegrationMarshalling
+import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+import StatusCodes._
 
 /**
  * Routes can be defined in separated classes like shown in here
  */
 trait IntegrationRoutes extends IntegrationHelperConnector with IntegrationMarshalling {
-
-  import StatusCodes._
-
-import com.draugrsoft.integration.helper.messages.CommonActorMessages._
-import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 
   val integration = "integration"
   val job = "job"

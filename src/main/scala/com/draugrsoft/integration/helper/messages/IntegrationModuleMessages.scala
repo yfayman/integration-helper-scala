@@ -7,7 +7,7 @@ import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import com.typesafe.config.Config
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.messages.CommonActorMessages.HistoricalData
-import com.draugrsoft.integration.helper.store.DataStore.DefaultJobInstanceDataStore
+import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 
 object IntegrationModuleMessages {
 
