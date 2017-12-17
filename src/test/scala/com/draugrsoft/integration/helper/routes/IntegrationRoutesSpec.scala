@@ -11,7 +11,7 @@ import akka.actor._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.ContentTypes
-import com.draugrsoft.integraiton.helper.marshallers.IntegrationMarshalling
+import com.draugrsoft.integration.helper.marshallers.IntegrationMarshalling
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.draugrsoft.integration.helper.constants.JobStatus._

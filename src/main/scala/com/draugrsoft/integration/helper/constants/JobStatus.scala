@@ -1,6 +1,6 @@
 package com.draugrsoft.integration.helper.constants
 
-object JobStatus {
+private [integration] object JobStatus {
   
   sealed abstract class JobStatusEnum(name:String){
     override def toString = name

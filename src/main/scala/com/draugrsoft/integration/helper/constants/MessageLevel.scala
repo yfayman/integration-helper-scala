@@ -1,7 +1,7 @@
 package com.draugrsoft.integration.helper.constants
 
 
-object MessageLevel {
+private [integration] object MessageLevel {
   sealed abstract class MessageLevelEnum(name:String){
     override def toString = name
   }

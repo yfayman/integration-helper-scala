@@ -7,7 +7,7 @@ import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.util.{ Success, Failure }
 import akka.event.Logging
 
-object MasterDataActor {
+private [integration] object MasterDataActor {
   def props(dataStore: DataStore): Props = Props(classOf[MasterDataActor], dataStore)
 }
 

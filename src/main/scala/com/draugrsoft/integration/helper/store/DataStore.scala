@@ -7,7 +7,8 @@ import com.typesafe.config.Config
 /**
  * Stores everything in a hashmap
  */
-object DefaultJobInstanceDataStore extends DataStore {
+
+private [integration] object DefaultJobInstanceDataStore extends DataStore {
 
   override implicit val configOpt = None
 
@@ -27,7 +28,8 @@ object DefaultJobInstanceDataStore extends DataStore {
   }
 }
 
-trait DataStore {
+ 
+private [integration] trait DataStore {
 
   implicit val configOpt: Option[Config]
 

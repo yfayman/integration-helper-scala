@@ -5,14 +5,18 @@ import com.draugrsoft.integration.helper.constants.MessageLevel.MessageLevelEnum
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import akka.actor.ActorRef
 import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
+import com.draugrsoft.integration.helper.actors.MasterJobActor._
 
 /**
- * Messages that are sent to both MasterIntegration and MasterJob actors
+ * Messages used for interaction with Actors in this Project. These should not be
+ * visible to the client
  */
-object CommonActorMessages {
+private[integration] object CommonActorMessages {
 
   /* Provided by Client Job that sits under the JobMasterActor */
-  case class JobInstanceData(id: Int, name: String, start: Option[Long], end: Option[Long], params: List[JobParam], messages: List[JobMessage], attributes: Map[String, String], status: JobStatusEnum)
+  case class JobInstanceData(id: Int, name: String, start: Option[Long],
+                             end: Option[Long], params: List[JobParam], messages: List[JobMessage],
+                             attributes: Map[String, String], status: JobStatusEnum)
 
   // case class JobAttribute(name: String, value: String)
   case class HistoricalData(data: List[JobInstanceData])
@@ -38,11 +42,6 @@ object CommonActorMessages {
   case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
   case class JobAction(action: JobActionEnum, params: List[JobParam]) // This is Option[List] to allow for field to not exist in request
-
-  //Stuff sent to MasterJobActor from entrypointActor
-  case class LogAttribute(name: String, value: String)
-  case class JobMessage(msg: String, level: MessageLevelEnum)
-  case class SendResult(attribute: Map[String, String], messages: List[JobMessage])
 
   // Stuff sent to MasterDataActor
   case class SaveDataRequest(data: JobInstanceData)

@@ -2,7 +2,7 @@ package com.draugrsoft.integration.helper.actors
 
 import akka.actor.Actor
 
-trait ActorDispatcherExecutionContext {
+private [actors] trait ActorDispatcherExecutionContext {
   
   this: Actor =>
   

@@ -11,30 +11,31 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import akka.event.Logging
 
-object MasterIntegrationActor {
+private[integration] object MasterIntegrationActor {
 
   def props(integration: Integration): Props = Props(classOf[MasterIntegrationActor], integration)
 
 }
 
-class MasterIntegrationActor(integration: Integration) extends Actor 
-with FiveSecondTimeout 
-with ActorDispatcherExecutionContext{
+private[integration] class MasterIntegrationActor(integration: Integration) extends Actor
+  with FiveSecondTimeout
+  with ActorDispatcherExecutionContext {
 
   import MasterIntegrationActor._
-  
+
   val log = Logging(context.system, this)
 
   val dataStoreRef = context.actorOf(MasterDataActor.props(integration.store))
 
-  
-  
+  log.info(s"Started MasterIntegrationActor for $integration.name")
+
   /**
    * name -> JobMetaData
    *
    * JobMetaData contains information regarding the client actor, mastor actor and current status
    */
   var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
+
     val jobMasterActor = job match {
       case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name, dataStoreRef))
       case JobWithRef(name, ref)     => context.actorOf(MasterJobActor.props(ref, name, dataStoreRef))
@@ -46,9 +47,7 @@ with ActorDispatcherExecutionContext{
 
   val name = integration.name
 
-  def receive = runningState
-
-  def runningState: PartialFunction[Any, Unit] = {
+  def receive = {
     case UpdateStatusRequest(actor, status) => {
       val kvToReplace = jobMap.find(_._2.jobMasterActor == actor)
       if (kvToReplace.isDefined) {
@@ -82,15 +81,15 @@ with ActorDispatcherExecutionContext{
     }
 
     case jsr: JobStatiRequest => {
-      val requestor = sender()
+      val statiRequestor = sender()
 
-      jobMap.get(jsr.name).fold(requestor ! JobStatiResponse(Nil))(jmd => {
-        val responseFuture = jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
-        responseFuture.map { res => requestor ! res }
+      jobMap.get(jsr.name).fold(statiRequestor ! JobStatiResponse(Nil))(jmd => {
+        jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
+          .map { res => statiRequestor ! res }
       })
     }
 
-    case _ => ()
+    case msg => log.warning(s"Received an unknown message $msg")
   }
 
 }

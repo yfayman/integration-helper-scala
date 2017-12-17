@@ -12,9 +12,8 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.concurrent.duration.Duration
 import com.draugrsoft.integration.helper.constants.JobStatus._
-import com.draugrsoft.integration.helper.constants.JobAction.StartAction
+import com.draugrsoft.integration.helper.constants.JobAction._
 import com.draugrsoft.integration.helper.routes.DummyJobActor
-import com.draugrsoft.integration.helper.constants.JobAction.StopAction
 
 class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     with WordSpecLike

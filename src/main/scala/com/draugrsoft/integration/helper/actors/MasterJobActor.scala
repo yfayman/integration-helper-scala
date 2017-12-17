@@ -10,8 +10,15 @@ import akka.pattern.ask
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import akka.event.Logging
+import com.draugrsoft.integration.helper.constants.MessageLevel.MessageLevelEnum
 
-object MasterJobActor {
+
+private [integration] object MasterJobActor {
+  
+  //Stuff sent to MasterJobActor from entrypointActor
+  case class LogAttribute(name: String, value: String)
+  case class JobMessage(msg: String, level: MessageLevelEnum)
+  case class SendResult(attribute: Map[String, String], messages: List[JobMessage])
 
   def props(dispatcherProps: Props, name: String, dataStoreActor: ActorRef): Props =
     Props(classOf[MasterJobActor], Left(dispatcherProps), name, dataStoreActor)
@@ -20,14 +27,15 @@ object MasterJobActor {
     Props(classOf[MasterJobActor], Right(dispatcherRef), name, dataStoreActor)
 }
 
-class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor: ActorRef) extends Actor
+
+private [integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor: ActorRef) extends Actor
   with ActorDispatcherExecutionContext
   with FiveSecondTimeout {
 
   import MasterJobActor._
 
   val log = Logging(context.system, this)
-  val getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING)
+  val getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING) //TODO instance ID should not be 0
 
   log.info(s"Master Job Actor for $name started")
 
@@ -81,10 +89,9 @@ class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStore
       sender ! JobStatusResponse(Some(currentData))
     }
     case jsr: JobStatiRequest => {
-      val sendTo = sender()
+      val statiRequestor = sender()
      dataStoreActor.ask(GetHistoricalInfoRequest).mapTo[GetHistoricalInfoResponse]
-        .map(res => sendTo ! JobStatiResponse(currentData :: res.historicalData))
-   //    sender ! JobStatiResponse(currentData :: Nil)
+        .map(res => statiRequestor ! JobStatiResponse(currentData :: res.historicalData))
     }
 
     //Messages that come from dispatcher actor

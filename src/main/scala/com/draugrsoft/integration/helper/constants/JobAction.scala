@@ -3,7 +3,7 @@ package com.draugrsoft.integration.helper.constants
 /**
  * The actions a job can take
  */
-object JobAction {
+private [integration] object JobAction {
   sealed abstract class JobActionEnum(name: String) {
     override def toString = name
   }

@@ -15,13 +15,15 @@ import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
+import com.draugrsoft.integration.helper.actors.MasterJobActor._
+import org.scalatest.Sequential
 
 class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
   with WordSpecLike
   with MustMatchers
   with ImplicitSender
   with DefaultTimeout
-  with StopSystemAfterAll {
+  with StopSystemAfterAll{
 
   import MasterJobActor._
 

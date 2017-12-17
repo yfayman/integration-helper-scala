@@ -29,7 +29,7 @@ import akka.stream.ActorMaterializer
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.constants.JobAction._
 import com.draugrsoft.integration.helper.connector.IntegrationHelperConnector
-import com.draugrsoft.integraiton.helper.marshallers.IntegrationMarshalling
+import com.draugrsoft.integration.helper.marshallers.IntegrationMarshalling
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import StatusCodes._
 

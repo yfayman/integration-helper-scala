@@ -1,10 +1,11 @@
-package com.draugrsoft.integraiton.helper.marshallers
+package com.draugrsoft.integration.helper.marshallers
 
 import spray.json._
 import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.constants.JobAction._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
+import com.draugrsoft.integration.helper.actors.MasterJobActor._
 
 trait IntegrationMarshalling extends DefaultJsonProtocol {
 

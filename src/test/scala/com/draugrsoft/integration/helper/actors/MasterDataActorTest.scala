@@ -21,10 +21,6 @@ class MasterDataActorTest extends TestKit(ActorSystem("testsystem"))
     with DefaultTimeout
     with StopSystemAfterAll {
 
- 
-  
-  
-  
 
   "A Master Data Actor" must {
 

@@ -17,11 +17,9 @@ import akka.actor._
 import com.draugrsoft.integration.helper.routes.IntegrationRoutes
 import com.draugrsoft.integration.helper.routes.BaseRoutes
 import com.typesafe.config.ConfigFactory
+import com.draugrsoft.integration.helper.store.DataStore
 
-object WebServer extends Directives with IntegrationRoutes {
-  
-  import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
-  import com.draugrsoft.integration.helper.store.DataStore
+object WebServer extends Directives with IntegrationRoutes {  
   
   val ints = Integration("integration1", JobWithProps("jerbOne",DummyJobActor.props) :: JobWithProps("jerbTwo", DummyJobActor.props) :: Nil)
 
