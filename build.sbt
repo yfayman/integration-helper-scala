@@ -21,3 +21,7 @@ lazy val root = (project in file(".")).
    	  "ch.qos.logback" % "logback-classic" % "1.1.7"
     )
   )
+  
+// The actor tests are done in a single thread. At the end of the day,
+// This part of the application is not "distributed"
+parallelExecution in Test := false
