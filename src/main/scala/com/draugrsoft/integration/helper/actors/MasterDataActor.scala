@@ -26,10 +26,10 @@ class MasterDataActor(dataStore: DataStore) extends Actor
       }
     }
     case GetHistoricalInfoRequest => {
-      val sendTo = sender
+      val requestor = sender
       dataStore.read.onComplete({
-        case Success(hd) => sendTo ! GetHistoricalInfoResponse(hd.data)
-        case Failure(e)  => sendTo ! Status.Failure(e)
+        case Success(hd) => requestor ! GetHistoricalInfoResponse(hd.data)
+        case Failure(e)  => requestor ! Status.Failure(e)
       })
     }
     case _ =>
