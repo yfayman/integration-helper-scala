@@ -11,10 +11,11 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import akka.event.Logging
 import com.draugrsoft.integration.helper.constants.MessageLevel.MessageLevelEnum
+import scala.util.{ Success, Failure }
+import akka.actor.Status
 
+private[integration] object MasterJobActor {
 
-private [integration] object MasterJobActor {
-  
   //Stuff sent to MasterJobActor from entrypointActor
   case class LogAttribute(name: String, value: String)
   case class JobMessage(msg: String, level: MessageLevelEnum)
@@ -27,8 +28,7 @@ private [integration] object MasterJobActor {
     Props(classOf[MasterJobActor], Right(dispatcherRef), name, dataStoreActor)
 }
 
-
-private [integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor: ActorRef) extends Actor
+private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], name: String, dataStoreActor: ActorRef) extends Actor
   with ActorDispatcherExecutionContext
   with FiveSecondTimeout {
 
@@ -45,25 +45,21 @@ private [integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], n
   }
 
   var currentData: JobInstanceData = getInitStatus
-  //var historicalData: List[JobInstanceData] = Nil
 
-  def receive = runningState
-
-  def runningState: PartialFunction[Any, Unit] = {
-     case HistoricalData(data) => {
-       data.foreach(jid => dataStoreActor ! SaveDataRequest(jid))
+  def receive = {
+    case HistoricalData(data) => {
+      data.foreach(jid => dataStoreActor ! SaveDataRequest(jid))
     }
     case ja: JobAction => {
       ja.action match {
         case StartAction => {
           if (currentData.status == COMPLETED) {
-            //   historicalData = currentData :: historicalData
             dataStoreActor ! SaveDataRequest(currentData)
-
             currentData = getInitStatus // reset this
           }
           if (currentData.status != RUNNING) {
             dispatcherActor ! ja
+
             currentData = currentData.
               copy(
                 status = RUNNING,
@@ -90,8 +86,11 @@ private [integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], n
     }
     case jsr: JobStatiRequest => {
       val statiRequestor = sender()
-     dataStoreActor.ask(GetHistoricalInfoRequest).mapTo[GetHistoricalInfoResponse]
-        .map(res => statiRequestor ! JobStatiResponse(currentData :: res.historicalData))
+      dataStoreActor.ask(GetHistoricalInfoRequest).mapTo[GetHistoricalInfoResponse]
+        .onComplete({
+          case Success(ghir) => statiRequestor ! JobStatiResponse(currentData :: ghir.historicalData)
+          case Failure(e)    =>  Status.Failure(e)
+        })
     }
 
     //Messages that come from dispatcher actor

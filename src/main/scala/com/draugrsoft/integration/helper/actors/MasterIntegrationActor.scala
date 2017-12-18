@@ -10,6 +10,8 @@ import scala.concurrent.Future
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import akka.event.Logging
+import scala.util.{Success,Failure}
+import akka.actor.Status
 
 private[integration] object MasterIntegrationActor {
 
@@ -42,16 +44,16 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
     }
 
     JobMetaData(job, jobMasterActor, INITIALIZING)
-  }).groupBy { jmd => jmd.job.name }
+  }).groupBy { _.job.name }
     .mapValues { _.head }
 
   val name = integration.name
 
   def receive = {
     case UpdateStatusRequest(actor, status) => {
-      val kvToReplace = jobMap.find(_._2.jobMasterActor == actor)
-      if (kvToReplace.isDefined) {
-        val kv = kvToReplace.get
+      val kvToReplaceOpt = jobMap.find(_._2.jobMasterActor == actor)
+      if (kvToReplaceOpt.isDefined) {
+        val kv = kvToReplaceOpt.get
         val jobName = kv._1
         val jmd = kv._2.copy(status = status)
         jobMap = jobMap + (jobName -> jmd)
@@ -63,20 +65,31 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
     }
     case UpdateJobsRequest(action) => {
       val requestor = sender()
-      val reply = Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, Nil)).mapTo[UpdateJobResponse] } }
-      reply.map { items => requestor ! items.toList }
+      Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, Nil)).mapTo[UpdateJobResponse] } }
+        .onComplete({
+          case Success(items) => requestor ! items.toList 
+          case Failure(e) => requestor ! Status.Failure(e)
+        })
+      
     }
     case UpdateJobRequest(jobName, action) => {
       val requestor = sender()
       jobMap.get(jobName).fold(sender() ! JobNotFound)(jmd => {
-        jmd.jobMasterActor.ask(action).mapTo[UpdateJobResponse].map { updateResponse => requestor ! updateResponse }
+        jmd.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
+          .onComplete({
+            case Success(ur) => requestor ! ur
+            case Failure(e) =>  Status.Failure(e)
+          })
       })
     }
     case jsr: JobStatusRequest => {
       val requestor = sender
       jobMap.get(jsr.name).fold(requestor ! JobStatusResponse(None))(jmd => {
-        val responseFuture = jmd.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
-        responseFuture.map { res => requestor ! res }
+        jmd.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
+          .onComplete({
+            case Success(jsr) => requestor ! jsr
+            case Failure (e) => //TODO add error handling
+          })
       })
     }
 
@@ -85,7 +98,10 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
 
       jobMap.get(jsr.name).fold(statiRequestor ! JobStatiResponse(Nil))(jmd => {
         jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
-          .map { res => statiRequestor ! res }
+          .onComplete({
+            case Success(jsr) => statiRequestor ! jsr
+            case Failure(e) =>  Status.Failure(e)
+          })
       })
     }
 
