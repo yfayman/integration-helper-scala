@@ -22,6 +22,10 @@ private [integration] object DefaultJobInstanceDataStore extends DataStore {
     val data = mutableMap.values.toList
     Future.successful(HistoricalData(data))
   }
+  
+  def delete(data:JobInstanceData): Future[Boolean] = {
+    mutableMap.remove(data.id).fold[Future[Boolean]](Future.successful(false))(_ => Future.successful(true))
+  }
 
   def clear = {
     mutableMap.clear()
@@ -35,4 +39,5 @@ private [integration] trait DataStore {
 
   def create(data: JobInstanceData): Future[Boolean]
   def read: Future[HistoricalData]
+  def delete(data:JobInstanceData): Future[Boolean]
 }
