@@ -55,7 +55,10 @@ class MasterDataActor(dataStore: DataStore) extends Actor
               self.ask(jid).mapTo[SaveDataResponse]
             })).onComplete({
               case Success(sdr) => {
-                if (sdr.forall(_.success)) { currentDataStore = primaryDataStore }
+                if (sdr.forall(_.success)) {
+                  currentDataStore = primaryDataStore
+                  fallbackDataStore.clear
+                }
               }
               case Failure(e) => context.parent ! Status.Failure(e)
             })

@@ -89,7 +89,7 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
       dataStoreActor.ask(GetHistoricalInfoRequest).mapTo[GetHistoricalInfoResponse]
         .onComplete({
           case Success(ghir) => statiRequestor ! JobStatiResponse(currentData :: ghir.historicalData)
-          case Failure(e)    =>  Status.Failure(e)
+          case Failure(e)    =>   context.parent ! Status.Failure(e)
         })
     }
 
