@@ -68,7 +68,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
       Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, Nil)).mapTo[UpdateJobResponse] } }
         .onComplete({
           case Success(items) => requestor ! items.toList 
-          case Failure(e) => requestor ! Status.Failure(e)
+          case Failure(e) => context.parent ! Status.Failure(e)
         })
       
     }
@@ -78,7 +78,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
         jmd.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
           .onComplete({
             case Success(ur) => requestor ! ur
-            case Failure(e) =>  Status.Failure(e)
+            case Failure(e) =>  context.parent ! Status.Failure(e)
           })
       })
     }
@@ -88,7 +88,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
         jmd.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
           .onComplete({
             case Success(jsr) => requestor ! jsr
-            case Failure (e) => //TODO add error handling
+            case Failure (e) =>  context.parent ! Status.Failure(e)
           })
       })
     }
@@ -100,7 +100,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
         jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
           .onComplete({
             case Success(jsr) => statiRequestor ! jsr
-            case Failure(e) =>  Status.Failure(e)
+            case Failure(e) => context.parent ! Status.Failure(e)
           })
       })
     }
