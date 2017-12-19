@@ -11,6 +11,8 @@ import akka.pattern.ask
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 import scala.util.Try
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import java.util.concurrent.TimeUnit
 
 private[integration] object MasterDataActor {
   def props(dataStore: DataStore): Props = Props(classOf[MasterDataActor], dataStore)
@@ -74,8 +76,12 @@ class MasterDataActor(dataStore: DataStore) extends Actor
 
   /**
    * If it's restarting, we will want to switch to fallbackDataStore
+   * and add a revert message in 30 seconds
    */
   override def postRestart(e: Throwable) = {
     currentDataStore = fallbackDataStore
+    context.system.scheduler.scheduleOnce(
+      Duration.create(30, TimeUnit.SECONDS),
+      () => { self ! RevertToPrimaryDataStore })
   }
 }
