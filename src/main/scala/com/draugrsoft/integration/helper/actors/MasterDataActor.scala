@@ -34,6 +34,10 @@ class MasterDataActor(dataStore: DataStore) extends Actor
 
   val log = Logging(context.system, this)
 
+  
+/**
+ * These messages will typically be sent from the MasterIntegrationActor
+ */
   def receive = {
     case SaveDataRequest(data) => {
       val sendTo = sender
@@ -52,18 +56,20 @@ class MasterDataActor(dataStore: DataStore) extends Actor
     case RevertToPrimaryDataStore => {
       fallbackDataStore.read.onComplete({
         case Success(hd) => {
-          Future.sequence(
-            hd.data.map(jid => {
-              self.ask(jid).mapTo[SaveDataResponse]
-            })).onComplete({
-              case Success(sdr) => {
-                if (sdr.forall(_.success)) {
-                  currentDataStore = primaryDataStore
-                  fallbackDataStore.clear
-                }
+          Future.sequence{
+            hd.data.map(
+              jid => self.ask(jid).mapTo[SaveDataResponse])
+          }.onComplete({
+            case Success(sdr) => {
+              if (sdr.forall(_.success)) {
+                currentDataStore = primaryDataStore
+                fallbackDataStore.clear
+              }else{
+                //TODO
               }
-              case Failure(e) => context.parent ! Status.Failure(e)
-            })
+            }
+            case Failure(e) => context.parent ! Status.Failure(e)
+          })
         }
         case Failure(e) => context.parent ! Status.Failure(e)
       })
@@ -83,5 +89,6 @@ class MasterDataActor(dataStore: DataStore) extends Actor
     context.system.scheduler.scheduleOnce(
       Duration.create(30, TimeUnit.SECONDS),
       () => { self ! RevertToPrimaryDataStore })
+    super.postRestart(e)
   }
 }

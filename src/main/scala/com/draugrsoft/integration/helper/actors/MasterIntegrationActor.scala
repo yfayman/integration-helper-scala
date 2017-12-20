@@ -49,22 +49,27 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
 
   val name = integration.name
 
+  /**
+   * These messages come from routes. This actor then either gets information from its' state
+   * or defers to a JobMasterActor
+   */
   def receive = {
     case UpdateStatusRequest(actor, status) => {
-      val kvToReplaceOpt = jobMap.find(_._2.jobMasterActor == actor)
-      if (kvToReplaceOpt.isDefined) {
-        val kv = kvToReplaceOpt.get
-        val jobName = kv._1
-        val jmd = kv._2.copy(status = status)
-        jobMap = jobMap + (jobName -> jmd)
-      }
+      jobMap.find(_._2.jobMasterActor == actor)
+            .fold[Unit]{sender ! JobNotFound}{ 
+                nameAndMetadata => {
+                  val jobName = nameAndMetadata._1
+                  val jmd = nameAndMetadata._2.copy(status = status)
+                  jobMap = jobMap + (jobName -> jmd)
+                }
+              }
     }
     case IntegrationStatusRequest => {
       val stati = jobMap.values.map(jmd => JobRecentStatus(jmd.job.name, jmd.status)).toList
-      sender() ! IntegrationRecentStatus(name, stati)
+      sender ! IntegrationRecentStatus(name, stati)
     }
     case UpdateJobsRequest(action) => {
-      val requestor = sender()
+      val requestor = sender
       Future.sequence { jobMap.values.map { jmd => jmd.jobMasterActor.ask(JobAction(action, Nil)).mapTo[UpdateJobResponse] } }
         .onComplete({
           case Success(items) => requestor ! items.toList 
@@ -73,36 +78,39 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
       
     }
     case UpdateJobRequest(jobName, action) => {
-      val requestor = sender()
-      jobMap.get(jobName).fold(sender() ! JobNotFound)(jmd => {
-        jmd.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
-          .onComplete({
-            case Success(ur) => requestor ! ur
-            case Failure(e) =>  context.parent ! Status.Failure(e)
-          })
-      })
+      val requestor = sender
+      jobMap.get(jobName)
+            .fold(sender ! JobNotFound){
+                _.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
+                        .onComplete({
+                          case Success(ur) => requestor ! ur
+                          case Failure(e) =>  context.parent ! Status.Failure(e)
+                        })
+      }
     }
     case jsr: JobStatusRequest => {
       val requestor = sender
-      jobMap.get(jsr.name).fold(requestor ! JobStatusResponse(None))(jmd => {
-        jmd.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
-          .onComplete({
-            case Success(jsr) => requestor ! jsr
-            case Failure (e) =>  context.parent ! Status.Failure(e)
-          })
-      })
+      jobMap.get(jsr.name)
+            .fold(requestor ! JobStatusResponse(None)){
+                  _.jobMasterActor.ask(jsr).mapTo[JobStatusResponse]
+                          .onComplete({
+                            case Success(jsr) => requestor ! jsr
+                            case Failure (e) =>  context.parent ! Status.Failure(e)
+                          })
+      }
     }
 
     case jsr: JobStatiRequest => {
-      val statiRequestor = sender()
+      val statiRequestor = sender
 
-      jobMap.get(jsr.name).fold(statiRequestor ! JobStatiResponse(Nil))(jmd => {
-        jmd.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
-          .onComplete({
-            case Success(jsr) => statiRequestor ! jsr
-            case Failure(e) => context.parent ! Status.Failure(e)
-          })
-      })
+      jobMap.get(jsr.name)
+            .fold(statiRequestor ! JobStatiResponse(Nil)){
+                _.jobMasterActor.ask(jsr).mapTo[JobStatiResponse]
+                      .onComplete({
+                        case Success(jsr) => statiRequestor ! jsr
+                        case Failure(e) => context.parent ! Status.Failure(e)
+                      })
+      }
     }
 
     case msg => log.warning(s"Received an unknown message $msg")

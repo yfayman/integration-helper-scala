@@ -35,7 +35,8 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
   import MasterJobActor._
 
   val log = Logging(context.system, this)
-  val getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING) //TODO instance ID should not be 0
+  
+  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING) //TODO instance ID should not be 0
 
   log.info(s"Master Job Actor for $name started")
 
@@ -50,36 +51,39 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
     case HistoricalData(data) => {
       data.foreach(jid => dataStoreActor ! SaveDataRequest(jid))
     }
-    case ja: JobAction => {
-      ja.action match {
+    case JobAction(action, params) => {
+      action match {
         case StartAction => {
           if (currentData.status == COMPLETED) {
             dataStoreActor ! SaveDataRequest(currentData)
             currentData = getInitStatus // reset this
-          }
-          if (currentData.status != RUNNING) {
-            dispatcherActor ! ja
+          }else if(currentData.status != RUNNING) {
+            dispatcherActor ! JobAction(action, params)
 
-            currentData = currentData.
-              copy(
+            currentData = currentData.copy(
                 status = RUNNING,
                 start = Some(System.currentTimeMillis()),
-                params = ja.params ::: currentData.params)
+                params = params ::: currentData.params
+            )
+          }else{
+            // If you're here, the job is running. You don't want to start it again
           }
         }
         case StopAction => {
           if (currentData.status == RUNNING) {
-            dispatcherActor ! ja
-            currentData = currentData.
-              copy(
+            dispatcherActor ! JobAction(action, params)
+            currentData = currentData.copy(
                 status = STOPPED,
-                end = Some(System.currentTimeMillis()),
-                params = ja.params ::: currentData.params)
+                end = Some(System.currentTimeMillis),
+                params = params ::: currentData.params
+            )
+          }else{
+            // If it's not running, then there's no point in stopping
           }
         }
       }
       context.parent ! UpdateStatusRequest(self, currentData.status)
-      sender() ! UpdateJobResponse(currentData)
+      sender ! UpdateJobResponse(currentData)    
     }
     case jsr: JobStatusRequest => {
       sender ! JobStatusResponse(Some(currentData))
@@ -95,18 +99,16 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
 
     //Messages that come from dispatcher actor
     case JobMessage(msg, level) =>
-      currentData = currentData.
-        copy(messages = JobMessage(msg, level) :: currentData.messages)
+      currentData = currentData.copy(messages = JobMessage(msg, level) :: currentData.messages)
     case LogAttribute(name, value) =>
       currentData = currentData.copy(attributes = currentData.attributes + (name -> value))
-    case SendResult(attributes, messages) => {
-      currentData = currentData
-        .copy(
+    case SendResult(attributes, messages) => 
+      currentData = currentData.copy(
           end = Some(System.currentTimeMillis()),
           status = COMPLETED,
           attributes = currentData.attributes ++ attributes,
-          messages = messages ::: currentData.messages)
-    }
+          messages = messages ::: currentData.messages
+       )
     case _ => ()
   }
 }
