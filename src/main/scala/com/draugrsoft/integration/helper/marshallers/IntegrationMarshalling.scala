@@ -49,7 +49,10 @@ trait IntegrationMarshalling extends DefaultJsonProtocol {
   //case class JobAction(action: JobActionEnum, params: List[JobParam])
   implicit object JobActionFormat extends RootJsonFormat[JobAction] {
     def write(ja: JobAction): JsObject = {
-      val jsParams = ja.params.map { p => JsObject("name" -> JsString(p.name), "value" -> JsString(p.value)) }
+      val jsParams = ja.params.map { p => JsObject(
+                                            "name" -> JsString(p.name), 
+                                             "value" -> JsString(p.value)
+                                          )}
       JsObject(
         "action" -> JsString(ja.action),
         "params" -> JsArray(jsParams))
