@@ -37,7 +37,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       val masterJob = system.actorOf(MasterJobActor.props(DummyActor.props, "test", dataStoreActor))
 
       masterJob ! JobStatusRequest("test")
-      expectMsg(JobStatusResponse(Some(JobInstanceData(0, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
+      expectMsg(JobStatusResponse(Some(JobInstanceData(id = None, "test", None, None, Nil, Nil, Map(), INITIALIZING))))
 
       val startReq = JobAction(StartAction, Nil)
 
@@ -74,8 +74,8 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       // just the current data
       assert(statusResponse.data.tail.isEmpty)
 
-      masterJob ! HistoricalData(JobInstanceData(55, "test", None, None, Nil, Nil, Map.empty, COMPLETED)
-        :: JobInstanceData(43, "test", None, None, Nil, Nil, Map.empty, COMPLETED) :: Nil)
+      masterJob ! HistoricalData(JobInstanceData(Some(55), "test", None, None, Nil, Nil, Map.empty, COMPLETED)
+        :: JobInstanceData(Some(43), "test", None, None, Nil, Nil, Map.empty, COMPLETED) :: Nil)
 
       val statusResponseAfterFuture = masterJob.ask(JobStatiRequest("test")).mapTo[JobStatiResponse]
       val statusResponseAfter = Await.result(statusResponseAfterFuture, Duration.Inf)

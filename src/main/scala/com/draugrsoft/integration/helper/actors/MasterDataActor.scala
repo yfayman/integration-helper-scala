@@ -41,8 +41,8 @@ class MasterDataActor(dataStore: DataStore) extends Actor
   def receive = {
     case SaveDataRequest(data) => {
       val sendTo = sender
-      currentDataStore.create(data).onComplete {
-        case Success(s) => sendTo ! SaveDataResponse(s)
+      currentDataStore.save(data).onComplete {
+        case Success(id) => sendTo ! SaveDataResponse(id,None)
         case Failure(e) => context.parent ! Status.Failure(e)
       }
     }
@@ -61,7 +61,7 @@ class MasterDataActor(dataStore: DataStore) extends Actor
               jid => self.ask(jid).mapTo[SaveDataResponse])
           }.onComplete({
             case Success(sdr) => {
-              if (sdr.forall(_.success)) {
+              if (sdr.forall(_.error.isEmpty)) {
                 currentDataStore = primaryDataStore
                 fallbackDataStore.clear
               }else{

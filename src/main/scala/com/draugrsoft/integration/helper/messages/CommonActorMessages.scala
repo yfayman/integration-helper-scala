@@ -14,9 +14,14 @@ import com.draugrsoft.integration.helper.actors.MasterJobActor._
 private[integration] object CommonActorMessages {
 
   /* Provided by Client Job that sits under the JobMasterActor */
-  case class JobInstanceData(id: Int, name: String, start: Option[Long],
-                             end: Option[Long], params: List[JobParam], messages: List[JobMessage],
-                             attributes: Map[String, String], status: JobStatusEnum)
+  case class JobInstanceData(id: Option[Int],
+                            name: String, 
+                            start: Option[Long],
+                            end: Option[Long],
+                            params: List[JobParam], 
+                            messages: List[JobMessage],
+                            attributes: Map[String, String], 
+                            status: JobStatusEnum)
 
   // case class JobAttribute(name: String, value: String)
   case class HistoricalData(data: List[JobInstanceData])
@@ -45,7 +50,7 @@ private[integration] object CommonActorMessages {
 
   // Stuff sent to MasterDataActor
   case class SaveDataRequest(data: JobInstanceData)
-  case class SaveDataResponse(success: Boolean)
+  case class SaveDataResponse(id: Int, error:Option[String])
   case object GetHistoricalInfoRequest
   case class GetHistoricalInfoResponse(historicalData: List[JobInstanceData])
 

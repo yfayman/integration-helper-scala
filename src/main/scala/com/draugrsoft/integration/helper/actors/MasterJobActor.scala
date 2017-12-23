@@ -36,7 +36,14 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
 
   val log = Logging(context.system, this)
   
-  def getInitStatus = JobInstanceData(0, name, None, None, Nil, Nil, Map(), INITIALIZING) //TODO instance ID should not be 0
+  def getInitStatus = JobInstanceData(id = None, 
+                                      name, 
+                                      start =None,
+                                      end = None, 
+                                      params = Nil,
+                                      messages = Nil,
+                                      attributes = Map(), 
+                                      INITIALIZING)
 
   log.info(s"Master Job Actor for $name started")
 

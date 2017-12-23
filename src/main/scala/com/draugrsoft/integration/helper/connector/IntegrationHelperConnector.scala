@@ -38,17 +38,19 @@ trait IntegrationHelperConnector {
   implicit val materializer: ActorMaterializer
 
   def getJobInfo(integrationName: String, jobName: String): Future[Option[JobInstanceData]] =
-    integrationMap.get(integrationName).fold[Future[Option[JobInstanceData]]](Future.successful(None)) {
-      _.dispatcherActor.ask(JobStatusRequest(jobName)).
-        mapTo[JobStatusResponse].map { _.data }
+    integrationMap.get(integrationName)
+                  .fold[Future[Option[JobInstanceData]]](Future.successful(None)) {
+                      _.dispatcherActor.ask(JobStatusRequest(jobName))
+                                        .mapTo[JobStatusResponse]
+                                        .map { _.data }
     }
 
   def stopJob(integrationName: String, jobName: String): Future[Option[JobInstanceData]] = ???
 
   def stopJobs(integrationName: String): Future[List[UpdateJobResponse]] = {
     integrationMap.get(integrationName).fold[Future[List[UpdateJobResponse]]](Future.successful(Nil)) {
-      _.dispatcherActor.ask(UpdateJobsRequest(StopAction)).
-        mapTo[List[UpdateJobResponse]]
+      _.dispatcherActor.ask(UpdateJobsRequest(StopAction))
+                        .mapTo[List[UpdateJobResponse]]
     }
   }
 
@@ -59,8 +61,9 @@ trait IntegrationHelperConnector {
    */
   def getJobsInfo(integrationName: String): Future[Option[IntegrationRecentStatus]] = {
     integrationMap.get(integrationName).fold[Future[Option[IntegrationRecentStatus]]](Future.successful(None)) {
-      _.dispatcherActor.ask(IntegrationStatusRequest).
-        mapTo[IntegrationRecentStatus].map(is => Some(is))
+      _.dispatcherActor.ask(IntegrationStatusRequest)
+                        .mapTo[IntegrationRecentStatus]
+                        .map(is => Some(is))
     }
   }
 
@@ -70,7 +73,8 @@ trait IntegrationHelperConnector {
   def getIntegrationsInfo: Future[List[IntegrationRecentStatus]] = {
     Future.sequence {
       integrationMap.values.map {
-        _.dispatcherActor.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
+        _.dispatcherActor.ask(IntegrationStatusRequest)
+                          .mapTo[IntegrationRecentStatus]
       }
     }.map(_.toList)
   }
@@ -84,7 +88,7 @@ trait IntegrationHelperConnector {
   def integrationAction(name: String, jobAction: JobAction): Future[List[UpdateJobResponse]] = {
     integrationMap.get(name).fold[Future[List[UpdateJobResponse]]](Future.successful(Nil)) {
       _.dispatcherActor.ask(UpdateJobsRequest(jobAction.action))
-        .mapTo[List[UpdateJobResponse]]
+                        .mapTo[List[UpdateJobResponse]]
     }
   }
 
@@ -97,8 +101,9 @@ trait IntegrationHelperConnector {
   def jobAction(integrationName: String, jobName: String, jobAction: JobAction): Future[Option[UpdateJobResponse]] = {
     integrationMap.get(integrationName).
       fold[Future[Option[UpdateJobResponse]]](Future.successful(None)) {
-        _.dispatcherActor.ask(UpdateJobRequest(jobName, jobAction)).
-          mapTo[UpdateJobResponse].map(ujar => Some(ujar))
+        _.dispatcherActor.ask(UpdateJobRequest(jobName, jobAction))
+                          .mapTo[UpdateJobResponse]
+                          .map(ujar => Some(ujar))
       }
   }
 
@@ -114,16 +119,15 @@ trait IntegrationHelperConnector {
    * @param name The name of the integration you want to stop
    */
   def stopIntegration(name: String): Future[Boolean] = {
-    integrationMap.get(name).fold(Future.successful(false))(imd => {
-      imd.dispatcherActor ! PoisonPill
-      Future.successful(true)
-    })
+    integrationMap.get(name).fold(Future.successful(false))(
+        imd => {
+          imd.dispatcherActor ! PoisonPill
+          Future.successful(true)
+        })
   }
 
-  private lazy val integrationMap = integrations.map(in => {
-    val metaData = initializeIntegration(in)
-    (in.name, metaData)
-  }).toMap
+  private lazy val integrationMap = integrations.map(in =>  (in.name, initializeIntegration(in)))
+                                                .toMap
 
   private def initializeIntegration(integration: Integration): IntegrationMetaData = {
     val mainIntegrationActor = system.actorOf(MasterIntegrationActor.props(integration))

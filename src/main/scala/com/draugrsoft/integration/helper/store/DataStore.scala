@@ -3,6 +3,7 @@ package com.draugrsoft.integration.helper.store
 import scala.concurrent.Future
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.typesafe.config.Config
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Stores everything in a hashmap
@@ -13,10 +14,16 @@ private [integration] object DefaultJobInstanceDataStore extends DataStore {
   override implicit val configOpt = None
 
   val mutableMap: scala.collection.mutable.Map[Int, JobInstanceData] = scala.collection.mutable.Map()
+  
+  val atomInt:AtomicInteger = new AtomicInteger(1)
 
-  def create(data: JobInstanceData): Future[Boolean] = {
-    mutableMap += (data.id -> data)
-    Future.successful(true)
+  def save(data: JobInstanceData): Future[Int] = {
+    val jobInstanceId = data.id match{
+      case Some(id) => id
+      case None =>         atomInt.get
+    }    
+    mutableMap += (jobInstanceId -> data)
+    Future.successful(jobInstanceId)
   }
   def read: Future[HistoricalData] = {
     val data = mutableMap.values.toList
@@ -24,7 +31,14 @@ private [integration] object DefaultJobInstanceDataStore extends DataStore {
   }
   
   def delete(data:JobInstanceData): Future[Boolean] = {
-    mutableMap.remove(data.id).fold[Future[Boolean]](Future.successful(false))(_ => Future.successful(true))
+    data.id match{
+      case Some(id) => {
+         mutableMap.remove(id)
+      .fold[Future[Boolean]](Future.successful(false))(_ => Future.successful(true))
+      }
+      case None => Future.successful(false)
+    }
+   
   }
 
   def clear = {
@@ -37,7 +51,7 @@ private [integration] trait DataStore {
 
   implicit val configOpt: Option[Config]
 
-  def create(data: JobInstanceData): Future[Boolean]
+  def save(data: JobInstanceData): Future[Int]
   def read: Future[HistoricalData]
   def delete(data:JobInstanceData): Future[Boolean]
 }

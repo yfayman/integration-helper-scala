@@ -25,16 +25,30 @@ class MasterDataActorTest extends TestKit(ActorSystem("testsystem"))
   "A Master Data Actor" must {
 
     val dActor = system.actorOf(MasterDataActor.props(DefaultJobInstanceDataStore))
-    val sample1JobInstanceData = JobInstanceData(99, "abc", None, None, Nil, Nil, Map.empty, COMPLETED)
-    val sample2JobInstanceData = JobInstanceData(100, "def", None, None, Nil, Nil, Map.empty, COMPLETED)
+    val sample1JobInstanceData = JobInstanceData(id = Some(99), 
+                                                 name = "abc", 
+                                                 start = None,
+                                                 end = None,
+                                                 params = Nil,
+                                                 messages =  Nil,
+                                                 attributes = Map.empty,
+                                                 COMPLETED)
+    val sample2JobInstanceData = JobInstanceData(id = Some(100),
+                                                 name = "def",
+                                                 start = None,
+                                                 end = None,
+                                                 params = Nil,
+                                                 messages = Nil,
+                                                 attributes = Map.empty,
+                                                 COMPLETED)
     
     
     "be able to successfully store new job instance data" in {
       dActor ! SaveDataRequest(sample1JobInstanceData)
-      expectMsg(SaveDataResponse(true))
+      expectMsg(SaveDataResponse(99, None))
       
       dActor ! SaveDataRequest(sample2JobInstanceData)
-      expectMsg(SaveDataResponse(true))
+      expectMsg(SaveDataResponse(100, None))
       
       dActor ! GetHistoricalInfoRequest
       expectMsg(GetHistoricalInfoResponse(sample2JobInstanceData :: sample1JobInstanceData :: Nil))
