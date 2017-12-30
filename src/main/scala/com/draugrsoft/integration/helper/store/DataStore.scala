@@ -15,12 +15,13 @@ private [integration] object DefaultJobInstanceDataStore extends DataStore {
 
   val mutableMap: scala.collection.mutable.Map[Int, JobInstanceData] = scala.collection.mutable.Map()
   
-  val atomInt:AtomicInteger = new AtomicInteger(1)
+  val jobInstanceIdTracker:AtomicInteger = new AtomicInteger(1)
+  val schedulerIdTracker:AtomicInteger = new AtomicInteger(1)
 
   def save(data: JobInstanceData): Future[Int] = {
     val jobInstanceId = data.id match{
       case Some(id) => id
-      case None =>         atomInt.get
+      case None =>   jobInstanceIdTracker.get
     }    
     mutableMap += (jobInstanceId -> data)
     Future.successful(jobInstanceId)
@@ -34,7 +35,7 @@ private [integration] object DefaultJobInstanceDataStore extends DataStore {
     data.id match{
       case Some(id) => {
          mutableMap.remove(id)
-      .fold[Future[Boolean]](Future.successful(false))(_ => Future.successful(true))
+                   .fold[Future[Boolean]](Future.successful(false))(_ => Future.successful(true))
       }
       case None => Future.successful(false)
     }
