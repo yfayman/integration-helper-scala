@@ -43,12 +43,12 @@ private[integration] object CommonActorMessages {
   case class JobStatiRequest(name: String)
   case object IntegrationStatusRequest
 
-  // Stuff sent to jobs
+  // Messages sent to jobs
   case class JobParam(name: String, value: String)
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
-  case class JobAction(action: JobActionEnum, params: List[JobParam]) // This is Option[List] to allow for field to not exist in request
+  case class JobAction(action: JobActionEnum, params: List[JobParam]) 
 
-  // Stuff sent to MasterDataActor
+  // Messages sent to MasterDataActor
   case class SaveDataRequest(data: JobInstanceData)
   case class SaveDataResponse(id: Int, error:Option[String])
   case object GetHistoricalInfoRequest
