@@ -47,7 +47,6 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
   }).groupBy { _.job.name }
     .mapValues { _.head }
 
-  val name = integration.name
 
   /**
    * These messages come from routes. This actor then either gets information from its' state
@@ -66,7 +65,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
     }
     case IntegrationStatusRequest => {
       val stati = jobMap.values.map(jmd => JobRecentStatus(jmd.job.name, jmd.status)).toList
-      sender ! IntegrationRecentStatus(name, stati)
+      sender ! IntegrationRecentStatus(integration.name, stati)
     }
     case UpdateJobsRequest(action) => {
       val requestor = sender
@@ -83,7 +82,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
             .fold(sender ! JobNotFound){
                 _.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
                         .onComplete({
-                          case Success(ur) => requestor ! ur
+                          case Success(ujr) => requestor ! ujr
                           case Failure(e) =>  context.parent ! Status.Failure(e)
                         })
       }
