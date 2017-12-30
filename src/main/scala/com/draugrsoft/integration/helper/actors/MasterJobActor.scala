@@ -14,7 +14,7 @@ import com.draugrsoft.integration.helper.constants.MessageLevel.MessageLevelEnum
 import scala.util.{ Success, Failure }
 import akka.actor.Status
 
-private[integration] object MasterJobActor {
+object MasterJobActor {
 
   //Stuff sent to MasterJobActor from entrypointActor
   case class LogAttribute(name: String, value: String)
@@ -38,20 +38,32 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
   
   def getInitStatus = JobInstanceData(id = None, 
                                       name, 
-                                      start =None,
-                                      end = None, 
-                                      params = Nil,
-                                      messages = Nil,
-                                      attributes = Map(), 
+                                      start= None,
+                                      end= None, 
+                                      params= Nil,
+                                      messages= Nil,
+                                      attributes= Map(), 
                                       INITIALIZING)
 
   log.info(s"Master Job Actor for $name started")
 
+  /**
+   * The actor which receives start/stop messages from this actor.
+   * Provided by caller
+   */
   val dispatcherActor = actorInfo match {
     case Left(props) => context.actorOf(props)
     case Right(ref)  => ref
   }
-
+  
+  /**
+   * Initialize scheduler actor  
+   */
+   val schedulerActor = context.actorOf(SchedulerActor.props(dataStoreActor))
+  
+  /**
+   * Initialize current data to the default
+   */
   var currentData: JobInstanceData = getInitStatus
 
   def receive = {
