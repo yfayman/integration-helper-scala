@@ -16,7 +16,7 @@ import akka.actor.Status
 
 object MasterJobActor {
 
-  //Stuff sent to MasterJobActor from entrypointActor
+  //Messages sent to MasterJobActor from entrypointActor
   case class LogAttribute(name: String, value: String)
   case class JobMessage(msg: String, level: MessageLevelEnum)
   case class SendResult(attribute: Map[String, String], messages: List[JobMessage])
