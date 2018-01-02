@@ -14,7 +14,6 @@ import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
-import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 import com.draugrsoft.integration.helper.actors.MasterJobActor._
 import org.scalatest.Sequential
 
