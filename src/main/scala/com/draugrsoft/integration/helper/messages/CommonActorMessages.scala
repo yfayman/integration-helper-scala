@@ -2,10 +2,11 @@ package com.draugrsoft.integration.helper.messages
 
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import com.draugrsoft.integration.helper.constants.MessageLevel.MessageLevelEnum
-import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import akka.actor.ActorRef
 import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
 import com.draugrsoft.integration.helper.actors.MasterJobActor._
+import com.draugrsoft.integration.helper.constants.Trigger._
+import com.draugrsoft.integration.helper.constants.Cron._
 
 /**
  * Messages used for interaction with Actors in this Project. These should not be
@@ -48,6 +49,34 @@ private[integration] object CommonActorMessages {
   case class UpdateStatusRequest(job: ActorRef, status: JobStatusEnum)
   case class JobAction(action: JobActionEnum, params: List[JobParam]) 
 
+  // Scheduling
+  sealed abstract class Schedule(trigger:TriggerEnum)
+  //Triggers once
+  case class ScheduleSingleTrigger(time:Long) extends Schedule(SingleTrigger) 
+  //Triggers every X seconds
+  case class ScheduleSecondTrigger(secondInterval:Long) extends Schedule(SecondTrigger)
+  
+  case class ScheduleCronTrigger(seconds:CronSeconds,
+                                 minutes:CronMinutes,
+                                 hours:CronHours,
+                                 dayOfMonth:CronDayOfMonth,
+                                 dayOfWeek:CronDayOfWeek,
+                                 month:CronMonth) extends Schedule(CronTrigger)
+  
+  /**
+   * For interacting with persisted schedules
+   */
+  case object GetSchedule
+  case class GetScheduleResponse(xs:List[Schedule])
+  case class AddSchedule(sched:Schedule)
+  case class AddScheduleResponse(e:Option[Exception] = None) 
+  case class RemoveSchedule(sched:Schedule)
+  case class RemoveScheduleResponse(e:Option[Exception] = None)
+  case object ScheduleNotFound
+  
+  case object Trigger // fires of the job
+  
+  
   // Messages sent to MasterDataActor
   case class SaveDataRequest(data: JobInstanceData)
   case class SaveDataResponse(id: Int, error:Option[String])
