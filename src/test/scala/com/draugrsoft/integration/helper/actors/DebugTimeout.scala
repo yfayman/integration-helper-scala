@@ -5,5 +5,5 @@ import java.util.concurrent.TimeUnit
 
 trait DebugTimeout {
   
-    implicit val timeout = Timeout(50, TimeUnit.SECONDS)
+    implicit val timeout = Timeout(500, TimeUnit.SECONDS)
 }

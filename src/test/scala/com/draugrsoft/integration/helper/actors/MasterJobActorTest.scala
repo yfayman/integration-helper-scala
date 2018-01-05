@@ -108,20 +108,6 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
   }
 }
 
-/**
- * This actor takes the place of the dispatcher that sits under the JobMasterActor
- * so that the JobMaster Actor can be tested
- */
-object DummyActor {
-  def props: Props = Props(classOf[DummyActor])
-}
-
-class DummyActor extends Actor {
-  def receive = {
-    case _ => ()
-  }
-}
-
 object AddActor {
   def props: Props = Props(classOf[AddActor])
 }
