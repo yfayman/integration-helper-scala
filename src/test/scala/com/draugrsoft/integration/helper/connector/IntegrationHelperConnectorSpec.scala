@@ -104,12 +104,31 @@ class IntegrationHelperConnectorSpec extends WordSpec with Matchers {
      
       "IntegrationAction should not return a response for an integration that exists" in {
        connector.integrationAction("integration1", JobAction(StartAction,Nil)).onComplete({
-         case Success(updateJobResponseXs) => assert(updateJobResponseXs.isEmpty)
+         case Success(updateJobResponseXs) => assertResult(2)(updateJobResponseXs.size)
          case Failure(e) =>  fail("Got an unexpected error")
        })
      }
      
+      "Stop job on an integration that doesn't exist should return nothing" in {
+        connector.stopJob("fakeint", "jerb1").onComplete({
+          case Success(jidOpt) => assert(jidOpt.isEmpty)
+          case Failure(e) => fail("Got an unexpected error")
+        })
+      }
      
+      "Stop job on an integration that exists, but job doesn't exist should return nothing" in {
+        connector.stopJob("integration1","jerbNinty").onComplete({
+           case Success(jidOpt) => assert(jidOpt.isEmpty)
+           case Failure(e) => fail("Got an unexpected error")
+        })
+      }
+      
+      "Stop job on an integration that exists and a job that exists should return data" in {
+        connector.stopJob("integration1","jerbOne").onComplete({
+           case Success(jidOpt) => assert(jidOpt.isDefined)
+           case Failure(e) => fail("Got an unexpected error")
+        })
+      }
      
   }
   

@@ -45,7 +45,15 @@ trait IntegrationHelperConnector {
                                         .map { _.data }
     }
 
-  def stopJob(integrationName: String, jobName: String): Future[Option[JobInstanceData]] = ??? //TODO
+  def stopJob(integrationName: String, jobName: String): Future[Option[JobInstanceData]] = {
+    integrationMap.get(integrationName).fold[Future[Option[JobInstanceData]]](Future.successful(None)){
+      _.dispatcherActor.ask(JobAction(StopAction , Nil))
+                       .mapTo[UpdateJobResponse]
+                       .map(jid => Some(jid.data))
+    }
+    
+   
+  }
 
   def stopJobs(integrationName: String): Future[List[UpdateJobResponse]] = {
     integrationMap.get(integrationName).fold[Future[List[UpdateJobResponse]]](Future.successful(Nil)) {
