@@ -15,6 +15,7 @@ import com.draugrsoft.integration.helper.marshallers.IntegrationMarshalling
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.draugrsoft.integration.helper.constants.JobStatus._
+import com.draugrsoft.integration.helper.actors.DummyActor
 
 class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with IntegrationMarshalling {
 
@@ -27,7 +28,7 @@ class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTe
     override implicit val materializer = ActorMaterializer()
     override implicit val ec = system.dispatcher
 
-    lazy val testIntegration = Integration("integration1", JobWithProps("jerbOne", DummyJobActor.props) :: JobWithProps("jerbTwo", DummyJobActor.props) :: Nil)
+    lazy val testIntegration = Integration("integration1", JobWithProps("jerbOne", DummyActor.props) :: JobWithProps("jerbTwo", DummyActor.props) :: Nil)
 
   }
 
@@ -114,18 +115,4 @@ class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTe
 
   }
 
-}
-
-/**
- * This actor takes the place of the dispatcher that sits under the JobMasterActor
- * so that the JobMaster Actor can be tested
- */
-object DummyJobActor {
-  def props: Props = Props(classOf[DummyJobActor])
-}
-
-class DummyJobActor extends Actor {
-  def receive = {
-    case _ => ()
-  }
 }

@@ -5,6 +5,7 @@ import akka.event.Logging
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.concurrent.duration._
 import scala.util.{Try,Success,Failure}
+import com.draugrsoft.integration.helper.cron.NextRunCalculator
 
 object SchedulerActor {
 
@@ -24,9 +25,10 @@ class SchedulerActor(dataStoreActor: ActorRef) extends Actor
 
   def receive = {
     case GetSchedule => sender ! GetScheduleResponse(map.keys.toList)
-    case AddSchedule(schedule) => {    
+    case AddSchedule(schedule) => {  
+
        val futureTaskTry = Try {
-         context.system.scheduler.scheduleOnce(delayCalc(schedule), context.parent, Trigger)
+         context.system.scheduler.scheduleOnce(NextRunCalculator(schedule), context.parent, Trigger(schedule))
        }
        
        futureTaskTry match {
@@ -46,14 +48,26 @@ class SchedulerActor(dataStoreActor: ActorRef) extends Actor
         sender ! RemoveScheduleResponse()
       })
     }
-    case Trigger => context.parent ! Trigger
-    case a => log.info(s"Received unknown msg type $a")
+    case Trigger(sched) => {
+      context.parent ! TriggerOnce
+      sched match {
+        case ScheduleCronTrigger(sec,min,hour,dom,dow,month) =>
+        case _ => //If it's anything but a cron trigger, nothing needs to be done
+
+      }
+    }
+    case unknown => log.info(s"Received unknown msg type $unknown")
   }
   
-  /**
-   * Calculates the delay from the current time in order to ensure that
-   * the action occurs at the right time
+  /*
+   * 
+   * 
+   *   case class ScheduleCronTrigger(seconds:CronSeconds,
+                                 minutes:CronMinutes,
+                                 hours:CronHours,
+                                 dayOfMonth:CronDayOfMonth,
+                                 dayOfWeek:CronDayOfWeek,
+                                 month:CronMonth) extends Schedule(CronTrigger)
    */
-  def delayCalc(sched: Schedule) : FiniteDuration = FiniteDuration(10,SECONDS) //TODO temporary implementation
-
+  
 }

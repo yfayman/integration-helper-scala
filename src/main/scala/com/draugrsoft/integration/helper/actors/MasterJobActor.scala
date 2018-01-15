@@ -128,7 +128,7 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
           attributes = currentData.attributes ++ attributes,
           messages = messages ::: currentData.messages
        )  
-    case Trigger => self ! JobAction(StartAction, Nil)
+    case TriggerOnce => self ! JobAction(StartAction, Nil)
     case _ => ()
   }
 }

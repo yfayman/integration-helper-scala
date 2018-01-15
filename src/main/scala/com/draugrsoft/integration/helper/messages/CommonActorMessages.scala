@@ -74,12 +74,16 @@ private[integration] object CommonActorMessages {
   case class RemoveScheduleResponse(e:Option[Exception] = None)
   case object ScheduleNotFound
   
-  case object Trigger // fires of the job
+  
+  // generates a TriggerOnce and reschedules depending on what type of schedule
+  case class Trigger(sched:Schedule) 
+  // Sent to master job actor
+  case object TriggerOnce 
   
   
   // Messages sent to MasterDataActor
   case class SaveDataRequest(data: JobInstanceData)
-  case class SaveDataResponse(id: Int, error:Option[String])
+  case class SaveDataResponse(idOrError:Either[Int,Exception])
   case object GetHistoricalInfoRequest
   case class GetHistoricalInfoResponse(historicalData: List[JobInstanceData])
 

@@ -13,13 +13,14 @@ import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.concurrent.duration.Duration
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.constants.JobAction._
-import com.draugrsoft.integration.helper.routes.DummyJobActor
+
 
 class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     with WordSpecLike
     with MustMatchers
     with ImplicitSender
-    with DefaultTimeout
+   // with DefaultTimeout
+    with DebugTimeout
     with StopSystemAfterAll {
 
   import MasterIntegrationActor._
@@ -27,7 +28,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
   "A MasterIntegrationActor" must {
 
     "create and be able to read status " in {
-      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyJobActor.props) :: Nil)
+      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyActor.props) :: Nil)
       val mainAct = system.actorOf(MasterIntegrationActor.props(testIntegration))
 
       mainAct ! IntegrationStatusRequest
@@ -55,7 +56,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "be able to create 2 jobs with unique names" in {
-      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyJobActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
+      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
       val mainAct = system.actorOf(MasterIntegrationActor.props(testIntegration))
 
       val statusOneFuture = mainAct.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
@@ -66,7 +67,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "be able to get detailed status information" in {
-      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyJobActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
+      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
       val mainAct = system.actorOf(MasterIntegrationActor.props(testIntegration))
 
       mainAct ! JobStatusRequest("test jerb")
@@ -85,7 +86,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "be able to execute an action on all jobs" in {
-      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyJobActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
+      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
       val mainAct = system.actorOf(MasterIntegrationActor.props(testIntegration))
 
       val updateJobResponseFuture = mainAct.ask(UpdateJobsRequest(StartAction)).mapTo[List[UpdateJobResponse]]
@@ -113,7 +114,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
     }
 
     "be able to check the status on individual and all jobs" in {
-      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyJobActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
+      val testIntegration = Integration("integration1", JobWithProps("test jerb", DummyActor.props) :: JobWithProps("test jerb 2", DummyActor.props) :: Nil)
       val mainAct = system.actorOf(MasterIntegrationActor.props(testIntegration))
 
       val jobStatiResponseFutureOne = mainAct.ask(JobStatiRequest("test jerb")).mapTo[JobStatiResponse]
