@@ -14,7 +14,6 @@ import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
-import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 import com.draugrsoft.integration.helper.actors.MasterJobActor._
 import org.scalatest.Sequential
 
@@ -42,9 +41,9 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       val startReq = JobAction(StartAction, Nil)
 
       Await.result(masterJob.ask(startReq), Duration.Inf) match {
-        case UpdateJobResponse(jid) if jid.start.isDefined => assert(true)
+        case UpdateJobResponse(jidOpt) if jidOpt.isDefined &&  jidOpt.get.start.isDefined => assert(true)
         case _ => assert(false)
-      }
+      } 
 
       Await.result(masterJob.ask(JobStatusRequest("test")), Duration.Inf) match {
         case JobStatusResponse(opt) if opt.isDefined && opt.get.status == RUNNING && opt.get.start.isDefined => assert(true)
@@ -54,7 +53,7 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       val stopReq = JobAction(StopAction, Nil)
 
       Await.result(masterJob.ask(stopReq), Duration.Inf) match {
-        case UpdateJobResponse(jid) if jid.end.isDefined => assert(true)
+        case UpdateJobResponse(jidOpt) if jidOpt.isDefined &&  jidOpt.get.end.isDefined => assert(true)
         case _ => assert(false)
       }
 
@@ -105,20 +104,6 @@ class MasterJobActorTest extends TestKit(ActorSystem("testsystem"))
       }
 
     }
-  }
-}
-
-/**
- * This actor takes the place of the dispatcher that sits under the JobMasterActor
- * so that the JobMaster Actor can be tested
- */
-object DummyActor {
-  def props: Props = Props(classOf[DummyActor])
-}
-
-class DummyActor extends Actor {
-  def receive = {
-    case _ => ()
   }
 }
 

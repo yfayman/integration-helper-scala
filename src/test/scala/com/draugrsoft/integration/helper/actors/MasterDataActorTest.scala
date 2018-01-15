@@ -45,10 +45,10 @@ class MasterDataActorTest extends TestKit(ActorSystem("testsystem"))
     
     "be able to successfully store new job instance data" in {
       dActor ! SaveDataRequest(sample1JobInstanceData)
-      expectMsg(SaveDataResponse(99, None))
+      expectMsg(SaveDataResponse(Left(99)))
       
       dActor ! SaveDataRequest(sample2JobInstanceData)
-      expectMsg(SaveDataResponse(100, None))
+      expectMsg(SaveDataResponse(Left(100)))
       
       dActor ! GetHistoricalInfoRequest
       expectMsg(GetHistoricalInfoResponse(sample2JobInstanceData :: sample1JobInstanceData :: Nil))

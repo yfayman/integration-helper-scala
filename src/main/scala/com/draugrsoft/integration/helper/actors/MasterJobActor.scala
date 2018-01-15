@@ -102,7 +102,7 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
         }
       }
       context.parent ! UpdateStatusRequest(self, currentData.status)
-      sender ! UpdateJobResponse(currentData)    
+      sender ! UpdateJobResponse(Some(currentData))    
     }
     case jsr: JobStatusRequest => {
       sender ! JobStatusResponse(Some(currentData))
@@ -127,7 +127,8 @@ private[integration] class MasterJobActor(actorInfo: Either[Props, ActorRef], na
           status = COMPLETED,
           attributes = currentData.attributes ++ attributes,
           messages = messages ::: currentData.messages
-       )
+       )  
+    case TriggerOnce => self ! JobAction(StartAction, Nil)
     case _ => ()
   }
 }

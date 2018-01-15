@@ -79,7 +79,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
     case UpdateJobRequest(jobName, action) => {
       val requestor = sender
       jobMap.get(jobName)
-            .fold(sender ! JobNotFound){
+            .fold(sender ! UpdateJobResponse(None)){
                 _.jobMasterActor.ask(action).mapTo[UpdateJobResponse]
                         .onComplete({
                           case Success(ujr) => requestor ! ujr

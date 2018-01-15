@@ -42,8 +42,11 @@ class MasterDataActor(dataStore: DataStore) extends Actor
     case SaveDataRequest(data) => {
       val sendTo = sender
       currentDataStore.save(data).onComplete {
-        case Success(id) => sendTo ! SaveDataResponse(id,None)
-        case Failure(e) => context.parent ! Status.Failure(e)
+        case Success(id) => sendTo ! SaveDataResponse(Left(id))
+        case Failure(throwable) => throwable match {
+          case ex:Exception => sendTo ! SaveDataResponse(Right(ex))
+          case t:Throwable => context.parent ! Status.Failure(t)
+        }
       }
     }
     case GetHistoricalInfoRequest => {
@@ -61,7 +64,7 @@ class MasterDataActor(dataStore: DataStore) extends Actor
               jid => self.ask(jid).mapTo[SaveDataResponse])
           }.onComplete({
             case Success(sdr) => {
-              if (sdr.forall(_.error.isEmpty)) {
+              if (sdr.forall(_.idOrError.isLeft)) {
                 currentDataStore = primaryDataStore
                 fallbackDataStore.clear
               }else{
