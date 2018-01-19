@@ -24,11 +24,11 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
     // 16th of January, 2018
     val twelvePM = 1516122000000l
 
-    "produce accurate delay for a ScheduleSingleTrigger" in {
-      val resultOne = NextRunCalculator(twoPM, ScheduleSingleTrigger(1515999700000L)) // changed 8th number 6 -> 7
+    "produce accurate delay for a ScheduleSingleTrigger" in {               
+      val resultOne = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516042900000l)) // changed 8th number 8 -> 9
       assertResult(100000.millis)(resultOne)
 
-      val resultTwo = NextRunCalculator(twoPM, ScheduleSingleTrigger(1515999650000L)) // changed 9th number 0 -> 5
+      val resultTwo = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516042850000l)) // changed 9th number 0 -> 5
       assertResult(50000.millis)(resultTwo)
     }
 
@@ -39,7 +39,7 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val resultTwo = NextRunCalculator(twoPM, ScheduleSecondTrigger(10))
       assertResult(10000.millis)(resultTwo)
     }
-
+//TODO Below
     "produce accurate delay for ScheduleCronTrigger with a hour based config" in {
       val fivePMTrigger = ScheduleCronTrigger(
         seconds = new SecondsVal(0),
@@ -73,7 +73,28 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       assertResult((sixThirtyPM - twoPM).millis)(resultThree)
 
     }
-
+ //TODO   Above
+    "produce the correct next seconds value" in {
+      
+      // If there is no next item on the list
+      val nextSecListRollOver = NextRunCalculator.getNextSec(SecondsVal(List(5,25,45)), 55)
+      assertResult(5)(nextSecListRollOver)
+      
+      val nextSecList = NextRunCalculator.getNextSec(SecondsVal(List(5,25,45)), 20)
+      assertResult(25)(nextSecList)
+      
+      // With a wildcard, the next second should be returned
+      val nextSecAll = NextRunCalculator.getNextSec(All, 24)
+      assertResult(25)(nextSecAll)
+      
+      // With one cron value, it should always return that value
+      val nextValSingle = NextRunCalculator.getNextSec(new SecondsVal(39), 58)
+      assertResult(39)(nextValSingle)
+      
+      // 59 should go to 0
+      val nextSecAllRollOver = NextRunCalculator.getNextSec(All, 59)
+      assertResult(0)(nextSecAllRollOver)
+    }
   }
 
 }

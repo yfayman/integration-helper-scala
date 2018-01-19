@@ -16,8 +16,7 @@ object Cron {
   case object All extends CronSeconds with CronMinutes with CronHours with CronDayOfMonth
                   with CronMonth with CronDayOfWeek
                   
-  case object NoVal extends CronSeconds with CronMinutes with CronHours with CronDayOfMonth
-                    with CronMonth with CronDayOfWeek
+  case object NoVal extends CronDayOfMonth with CronDayOfWeek
   
   case class SecondsVal(seconds:List[Int]) extends CronSeconds{
     def this(seconds:Int) = this(seconds::Nil)
