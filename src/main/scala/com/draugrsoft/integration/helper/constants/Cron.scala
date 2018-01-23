@@ -4,19 +4,27 @@ import TimeConstant._
 
 object Cron {
   
+   trait Omittable{
+    def isOmmitted:Boolean
+  }
   
   sealed trait CronSeconds
   sealed trait CronMinutes
   sealed trait CronHours
-  sealed trait CronDayOfMonth
-  sealed trait CronDayOfWeek
+  sealed trait CronDayOfMonth extends Omittable
+  sealed trait CronDayOfWeek extends Omittable
   sealed trait CronMonth
   
+
   
   case object All extends CronSeconds with CronMinutes with CronHours with CronDayOfMonth
-                  with CronMonth with CronDayOfWeek
+                  with CronMonth with CronDayOfWeek{
+   override def isOmmitted = false
+  }
                   
-  case object NoVal extends CronDayOfMonth with CronDayOfWeek
+  case object NoVal extends CronDayOfMonth with CronDayOfWeek{
+    override def isOmmitted = true
+  }
   
   case class SecondsVal(seconds:List[Int]) extends CronSeconds{
     def this(seconds:Int) = this(seconds::Nil)
@@ -36,6 +44,9 @@ object Cron {
   case class DayOfMonthVal(daysOfMonth:List[Int]) extends CronDayOfMonth{
     def this(dayOfMonth:Int) = this(dayOfMonth::Nil)
     assert(daysOfMonth.forall(dom => dom > 0 && dom <= 31 ))
+    
+    
+    override def isOmmitted = false
   }
   
   case class MonthVal(either:Either[List[Int],List[Month]]) extends CronMonth{
@@ -47,13 +58,15 @@ object Cron {
     }
   }
   
-  case class DayOfWeekVal(either:Either[List[Int],List[DayOfWeek]]) extends CronDayOfWeek{
+  case class DayOfWeekVal(either:Either[List[Int],List[DayOfWeek]]) extends CronDayOfWeek with Omittable{
     assert{
       either match{
         case Left(xsi) => xsi.forall(dayInt => dayInt > 0 && dayInt <= 7)
         case Right(xsd) => true
       }
     }
+    
+    override def isOmmitted = false
   }
   
   

@@ -95,6 +95,76 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val nextSecAllRollOver = NextRunCalculator.getNextSec(All, 59)
       assertResult(0)(nextSecAllRollOver)
     }
+    
+    "produce the correct next minutes value" in {
+      
+      // If there is no next item on the list
+      val nextMinListRollOver = NextRunCalculator.getNextMin(MinutesVal(List(5,25,45)), 55)
+      assertResult(5)(nextMinListRollOver)
+      
+      val nextMinList = NextRunCalculator.getNextMin(MinutesVal(List(5,25,45)), 20)
+      assertResult(25)(nextMinList)
+      
+      // With a wildcard, the next minute should be returned
+      val nextMinAll = NextRunCalculator.getNextMin(All, 24)
+      assertResult(25)(nextMinAll)
+      
+      // With one cron value, it should always return that value
+      val nextValSingle = NextRunCalculator.getNextMin(new MinutesVal(39), 58)
+      assertResult(39)(nextValSingle)
+      
+      // 59 should go to 0
+      val nextMinAllRollOver = NextRunCalculator.getNextMin(All, 59);
+      assertResult(0)(nextMinAllRollOver)
+      
+    }
+    
+    "produce the correct next hours value "  in {
+      // If there is no next item on the list
+      val nextHourListRollOver = NextRunCalculator.getNextHour(HoursVal(List(4,8,12)), 13)
+      assertResult(4)(nextHourListRollOver)
+      
+      val nextHourList = NextRunCalculator.getNextHour(HoursVal(List(4,8,12)), 6)
+      assertResult(8)(nextHourList)
+      
+      // With a wildcard, the next hour should be returned
+      val nextHourAll = NextRunCalculator.getNextHour(All, 22)
+      assertResult(23)(nextHourAll)
+      
+      // With one cron value, it should always return that value
+      val nextValSingle = NextRunCalculator.getNextHour(new HoursVal(12), 14)
+      assertResult(12)(nextValSingle)
+      
+      // 23 should go to 0
+      val nextHourAllRollOver = NextRunCalculator.getNextHour(All, 23);
+      assertResult(0)(nextHourAllRollOver)
+    }
+    
+    "produce the correct next Day of Month value" in {
+      
+       // If there is no next item on the list
+      val nextDayOfMonthListRollOver = NextRunCalculator.getNextDayOfMonth(DayOfMonthVal(List(1,5,10)), 24)
+      assertResult(Some(1))(nextDayOfMonthListRollOver)
+      
+      val nextDayOfMonthlist = NextRunCalculator.getNextDayOfMonth(DayOfMonthVal(List(1,5,10)), 3)
+      assertResult(Some(5))(nextDayOfMonthlist)
+      
+      // With a wildcard, the next day of month should be returned
+      val nextDayOfMonthAll = NextRunCalculator.getNextDayOfMonth(All, 24)
+      assertResult(Some(25))(nextDayOfMonthAll)
+      
+      // With one cron value, it should always return that value
+      val nextValSingle = NextRunCalculator.getNextDayOfMonth(new DayOfMonthVal(25), 29)
+      assertResult(Some(25))(nextValSingle)
+      
+      // 31 should go to 1
+      val nextHourAllRollOver = NextRunCalculator.getNextDayOfMonth(All, 31);
+      assertResult(Some(1))(nextHourAllRollOver)
+      
+      // If input is NoVal, output should be None
+      val nextHourNoVal = NextRunCalculator.getNextDayOfMonth(NoVal, 3)
+      assertResult(None)(nextHourNoVal)
+    }
   }
 
 }

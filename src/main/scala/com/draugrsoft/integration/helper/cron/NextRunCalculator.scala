@@ -24,6 +24,11 @@ object NextRunCalculator {
                                            cronDom:CronDayOfMonth,
                                            cronDow:CronDayOfWeek,
                                            cronMon:CronMonth):FiniteDuration = {
+    
+    
+    // check to make sure both are not selected
+    assert(cronDom.isOmmitted || cronDow.isOmmitted)
+    
     val fromCal = Calendar.getInstance;
     fromCal.setTimeInMillis(from)
     
@@ -98,7 +103,7 @@ object NextRunCalculator {
     cronDom match{
       case All => Some {
                     if(fromDayOfMonth == 31) 
-                      0 
+                      1 
                     else 
                       fromDayOfMonth + 1 
                   }
