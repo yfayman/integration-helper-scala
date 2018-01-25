@@ -15,13 +15,14 @@ private[integration] object TimeConstant {
   case object Nov extends Month
   case object Dec extends Month
   
-  sealed trait DayOfWeek
-  case object Mon extends DayOfWeek
-  case object Tues extends DayOfWeek
-  case object Wed extends DayOfWeek
-  case object Thur extends DayOfWeek
-  case object Fri extends DayOfWeek
-  case object Sat extends DayOfWeek
-  case object Sun extends DayOfWeek
+  sealed abstract class DayOfWeek(val numberRepresentation:Int)
+  case object Sun extends DayOfWeek(1) // 1
+  case object Mon extends DayOfWeek(2) // 2
+  case object Tues extends DayOfWeek(3) // 3
+  case object Wed extends DayOfWeek(4) // 4
+  case object Thur extends DayOfWeek(5) // 5
+  case object Fri extends DayOfWeek(6) // 6
+  case object Sat extends DayOfWeek(7) // 7
+  
 
 }
