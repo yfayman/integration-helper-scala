@@ -1,10 +1,13 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import org.scalatest.{ WordSpecLike, MustMatchers }
 import akka.testkit._
 import akka.actor._
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
 import akka.pattern.ask
+
+import com.draugrsoft.integration.helper.actors.MasterDataActor;
+import com.draugrsoft.integration.helper.actors.SchedulerActor;
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

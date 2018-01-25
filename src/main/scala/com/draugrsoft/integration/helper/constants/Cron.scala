@@ -4,6 +4,10 @@ import TimeConstant._
 
 object Cron {
   
+   /*
+    *  Only DayofWeek and DayOfMonth are ommittable parameters 
+    *  in cron expressions
+    */
    trait Omittable{
     def isOmmitted:Boolean
   }

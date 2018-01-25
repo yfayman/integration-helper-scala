@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.cron.test
 
 import org.scalatest.WordSpec
 import org.scalatest.Matchers

@@ -1,4 +1,6 @@
-package com.draugrsoft.integration.helper.routes
+package com.draugrsoft.integration.helper.routes.test
+
+import com.draugrsoft.integration.helper.routes.BaseRoutes;
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest

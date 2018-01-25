@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import akka.actor.Props
 import akka.actor.Actor

@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import org.scalatest.{ WordSpecLike, MustMatchers }
 import akka.testkit._
@@ -14,6 +14,8 @@ import scala.concurrent.Await
 import com.draugrsoft.integration.helper.constants.MessageLevel._
 import com.draugrsoft.integration.helper.store.DataStore
 import com.draugrsoft.integration.helper.store.DefaultJobInstanceDataStore
+import com.draugrsoft.integration.helper.actors.MasterDataActor;
+import com.draugrsoft.integration.helper.actors.MasterJobActor;
 import com.draugrsoft.integration.helper.actors.MasterJobActor._
 import org.scalatest.Sequential
 

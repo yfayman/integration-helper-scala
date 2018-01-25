@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import org.scalatest.{ Suite, BeforeAndAfterAll }
 import akka.testkit.TestKit

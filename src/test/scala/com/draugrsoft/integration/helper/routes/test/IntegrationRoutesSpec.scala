@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.routes
+package com.draugrsoft.integration.helper.routes.test
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -15,7 +15,8 @@ import com.draugrsoft.integration.helper.marshallers.IntegrationMarshalling
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages._
 import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import com.draugrsoft.integration.helper.constants.JobStatus._
-import com.draugrsoft.integration.helper.actors.DummyActor
+import com.draugrsoft.integration.helper.actors.test.DummyActor
+import com.draugrsoft.integration.helper.routes.IntegrationRoutes
 
 class IntegrationRoutesSpec extends WordSpec with Matchers with ScalatestRouteTest with IntegrationMarshalling {
 

@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import org.scalatest.{ WordSpecLike, MustMatchers }
 import akka.testkit._
@@ -12,6 +12,7 @@ import scala.collection.immutable.Map
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
 import com.draugrsoft.integration.helper.constants.JobStatus.JobStatusEnum
+import com.draugrsoft.integration.helper.actors.MasterDataActor;
 import com.draugrsoft.integration.helper.constants.JobStatus.COMPLETED
 
 class MasterDataActorTest extends TestKit(ActorSystem("testsystem"))

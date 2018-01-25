@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.connector
+package com.draugrsoft.integration.helper.connector.test
 
 import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages.Integration
 import akka.util.Timeout
@@ -12,6 +12,7 @@ import com.draugrsoft.integration.helper.messages.IntegrationModuleMessages.JobW
 import com.draugrsoft.integraiton.helper.DummyJobActor
 import scala.util.{Success,Failure}
 import com.draugrsoft.integration.helper.messages.CommonActorMessages.JobAction
+import com.draugrsoft.integration.helper.connector.IntegrationHelperConnector;
 import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
 import com.draugrsoft.integration.helper.constants.JobAction.JobActionEnum
 import com.draugrsoft.integration.helper.constants.JobAction.StartAction

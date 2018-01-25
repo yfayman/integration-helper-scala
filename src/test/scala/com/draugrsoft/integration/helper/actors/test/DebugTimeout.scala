@@ -1,4 +1,4 @@
-package com.draugrsoft.integration.helper.actors
+package com.draugrsoft.integration.helper.actors.test
 
 import akka.util.Timeout
 import java.util.concurrent.TimeUnit
