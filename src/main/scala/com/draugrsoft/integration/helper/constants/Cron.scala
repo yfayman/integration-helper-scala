@@ -21,10 +21,7 @@ object Cron {
   
 
   
-  case object All extends CronSeconds with CronMinutes with CronHours with CronDayOfMonth
-                  with CronMonth with CronDayOfWeek{
-   override def isOmmitted = false
-  }
+  case object All extends CronSeconds with CronMinutes with CronHours with CronMonth 
                   
   case object NoVal extends CronDayOfMonth with CronDayOfWeek{
     override def isOmmitted = true

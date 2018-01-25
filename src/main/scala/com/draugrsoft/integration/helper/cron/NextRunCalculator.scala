@@ -101,12 +101,6 @@ object NextRunCalculator {
   
   def getNextDayOfMonth(cronDom:CronDayOfMonth, fromDayOfMonth:Int) :Option[Int] = {
     cronDom match{
-      case All => Some {
-                    if(fromDayOfMonth == 31) 
-                      1 
-                    else 
-                      fromDayOfMonth + 1 
-                  }
       case NoVal => None
       case DayOfMonthVal(xs) => {
         val sortedDoms = xs.sorted
@@ -122,17 +116,22 @@ object NextRunCalculator {
   }
   
   def getNextDayOfWeek(cronDow:CronDayOfWeek, fromDayOfWeek:Int):Option[Int] = {
-    cronDow match{
-        case All => Some(fromDayOfWeek + 1)
+    cronDow match{       
         case NoVal => None
-        case DayOfWeekVal(either) => {
-          either match {
-            case Left(xs) =>
-            case Right(xs) =>
+        case DayOfWeekVal(either) => Some{
+          // Get the sorted Days of Weeks with the number representations
+          val sortedDow = (either match {
+            case Left(xs) => xs
+            case Right(xs) => xs.map(_.numberRepresentation)
+          }).sorted
+          // User number representations to get the next day
+          sortedDow.find(_ > fromDayOfWeek) match {
+            case Some(dow) => dow
+            case None => sortedDow.head
           }
+         
         }
     }
-    ???
   }
   
   
