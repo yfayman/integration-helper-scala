@@ -2,18 +2,44 @@ package com.draugrsoft.integration.helper.constants
 
 private[integration] object TimeConstant {
 
-  sealed trait Month
-  case object Jan extends Month
-  case object Feb extends Month
-  case object Mar extends Month
-  case object May extends Month
-  case object June extends Month
-  case object July extends Month
-  case object Aug extends Month
-  case object Sept extends Month
-  case object Oct extends Month
-  case object Nov extends Month
-  case object Dec extends Month
+  trait ThiryOneDayMonth {
+    def getLastDay(year:Int) = {
+      assert(year > 0)
+      31
+    }
+  }
+  
+  trait ThirtyDayMonth{
+    def getLastDay(year:Int) = {
+      assert(year > 0)
+      30
+    }
+  }
+  
+  sealed abstract class Month{
+    def getLastDay(year:Int):Int
+  }
+  case object Jan extends Month with ThiryOneDayMonth
+  case object Feb extends Month {
+    def getLastDay(year:Int) = {
+      assert(year > 0)
+      if(year % 4 == 0){
+        29
+      }else{
+        28
+      }
+    }
+  }
+  case object Mar extends Month with ThiryOneDayMonth
+  case object April extends Month with ThirtyDayMonth
+  case object May extends Month with ThiryOneDayMonth
+  case object June extends Month with ThirtyDayMonth
+  case object July extends Month with ThiryOneDayMonth
+  case object Aug extends Month with ThiryOneDayMonth
+  case object Sept extends Month with ThirtyDayMonth
+  case object Oct extends Month with ThiryOneDayMonth
+  case object Nov extends Month with ThirtyDayMonth
+  case object Dec extends Month with ThiryOneDayMonth
   
   sealed abstract class DayOfWeek(val numberRepresentation:Int)
   case object Sun extends DayOfWeek(1) // 1

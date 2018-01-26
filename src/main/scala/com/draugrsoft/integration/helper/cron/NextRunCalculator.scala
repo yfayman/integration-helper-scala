@@ -4,6 +4,7 @@ import com.draugrsoft.integration.helper.messages.CommonActorMessages._
 import scala.concurrent.duration._
 import com.draugrsoft.integration.helper.constants.Cron._
 import java.util.Calendar
+import com.draugrsoft.integration.helper.constants.TimeConstant.Month
 
 object NextRunCalculator {
   
@@ -38,6 +39,7 @@ object NextRunCalculator {
     val fromDayOfMonth = fromCal.get(Calendar.DAY_OF_MONTH) 
     val fromDayOfWeek = fromCal.get(Calendar.DAY_OF_WEEK)
     val fromMonth = fromCal.get(Calendar.MONTH) + 1 // Calendar goes 0 to 11. We need 1 to 12
+    val fromYear = fromCal.get(Calendar.YEAR)
     
     val nextSec = getNextSec(cronSec,fromSec)
     val nextMinute = getNextMin(cronMin,fromMinute)
@@ -68,6 +70,14 @@ object NextRunCalculator {
   }
   
   /**
+   * Is the second field going to roll over with the provided cron expression?
+   * This is used to determine if the field above(minute) needs to advance
+   */
+  def isRolloverSec(cronSec:CronSeconds, fromSec:Int):Boolean = {
+    getNextSec(cronSec,fromSec) < fromSec
+  }
+  
+  /**
    * Calculates the next minute component of the next fire. 
    * Ex. If a job fires at 20,40,50 seconds and the fromMinute is 30, 
    * then the next one should be 40
@@ -85,6 +95,13 @@ object NextRunCalculator {
     }
   }
   
+    /**
+   * Is the second field going to roll over with the provided cron expression?
+   * This is used to determine if the field above(hour) needs to advance
+   */
+  def isRolloverMin(cronMin:CronMinutes, fromMinute:Int):Boolean = {
+    getNextMin(cronMin,fromMinute) < fromMinute
+  }
   
   def getNextHour(cronHour:CronHours, fromHour:Int) :Int = {
   cronHour match {
@@ -97,6 +114,14 @@ object NextRunCalculator {
         }
       }
     }
+  }
+  
+    /**
+   * Is the second field going to roll over with the provided cron expression?
+   * This is used to determine if the field above(day) needs to advance
+   */
+  def isRolloverHour(cronHour:CronHours, fromHour:Int):Boolean = {
+    getNextHour(cronHour,fromHour) < fromHour
   }
   
   def getNextDayOfMonth(cronDom:CronDayOfMonth, fromDayOfMonth:Int) :Option[Int] = {
@@ -129,10 +154,15 @@ object NextRunCalculator {
             case Some(dow) => dow
             case None => sortedDow.head
           }
-         
         }
     }
   }
   
-  
+  /**
+   * Is it the end of the month
+   */
+  def isRollOverDay(fromDayOfMonth:Int, month:Month, year:Int):Boolean = {
+      val lastDayOfMonth = month.getLastDay(year)
+      fromDayOfMonth == lastDayOfMonth  
+  }  
 }
