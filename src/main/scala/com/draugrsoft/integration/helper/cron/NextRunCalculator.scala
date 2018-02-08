@@ -44,8 +44,19 @@ object NextRunCalculator {
     val nextSec = getNextSec(cronSec,fromSec)
     val nextMinute = getNextMin(cronMin,fromMinute)
     val nextHour = getNextHour(cronHour,fromHour)
-    val nextDom:Option[Int] = getNextDayOfMonth(cronDom,fromDayOfMonth) 
-    val nextDow = getNextDayOfWeek(cronDow,fromDayOfWeek) 
+    val nextDomOpt = getNextDayOfMonth(cronDom,fromDayOfMonth) 
+    val nextDowOpt = getNextDayOfWeek(cronDow,fromDayOfWeek) 
+    
+    val nextExecutionCal = Calendar.getInstance
+    nextExecutionCal.set(Calendar.SECOND, nextSec)
+    nextExecutionCal.set(Calendar.MINUTE, nextMinute)
+    nextExecutionCal.set(Calendar.HOUR, nextHour)
+    
+    // Only one of the 2 below should be present
+    nextDomOpt.foreach(nextDom => nextExecutionCal.set(Calendar.DAY_OF_MONTH,nextDom))
+    nextDowOpt.foreach(nextDow => nextExecutionCal.set(Calendar.DAY_OF_WEEK, nextDow))
+    
+    
     
     ???
   }
