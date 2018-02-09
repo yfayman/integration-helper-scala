@@ -14,10 +14,10 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
   "NextRunCalculatorTest" should {
 
     // 15th of January, 2018
-    val twoPM = 1516042800000l //starting time for all tests
-    val fourPM = 1516050000000l
-    val fivePM = 1516053600000l
-    val sixThirtyPM = 1516059000000l
+    val twoPM = 1516024800000l //starting time for all tests
+    val fourPM = 1516032000000l
+    val fivePM = 1516035600000l
+    val sixThirtyPM = 1516041000000l
 
     val cal = Calendar.getInstance
     cal.setTimeInMillis(twoPM) // 1/15/2018 2PM ESTs
@@ -26,10 +26,10 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
     val twelvePM = 1516122000000l
 
     "produce accurate delay for a ScheduleSingleTrigger" in {
-      val resultOne = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516042900000l)) // changed 8th number 8 -> 9
+      val resultOne = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516024900000l)) // changed 8th number 8 -> 9
       assertResult(100000.millis)(resultOne)
 
-      val resultTwo = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516042850000l)) // changed 9th number 0 -> 5
+      val resultTwo = NextRunCalculator(twoPM, ScheduleSingleTrigger(1516024850000l)) // changed 9th number 0 -> 5
       assertResult(50000.millis)(resultTwo)
     }
 
@@ -76,7 +76,7 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val fivePMTrigger = ScheduleCronTrigger(
         seconds = new SecondsVal(0),
         minutes = new MinutesVal(0),
-        hours = new HoursVal(5),
+        hours = new HoursVal(17),
         dayOfMonth = NoVal,
         dayOfWeek = NoVal,
         month = All)
@@ -86,7 +86,7 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val fourPMFivePMTrigger = ScheduleCronTrigger(
         seconds = new SecondsVal(0),
         minutes = new MinutesVal(0),
-        hours = HoursVal(4 :: 5 :: Nil),
+        hours = HoursVal(16 :: 17 :: Nil),
         dayOfMonth = NoVal,
         dayOfWeek = NoVal,
         month = All)
@@ -96,7 +96,7 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val sixThirtyPMTrigger = ScheduleCronTrigger(
         seconds = new SecondsVal(0),
         minutes = new MinutesVal(0),
-        hours = HoursVal(4 :: 5 :: Nil),
+        hours = HoursVal(16 :: 17 :: Nil),
         dayOfMonth = NoVal,
         dayOfWeek = NoVal,
         month = All)
