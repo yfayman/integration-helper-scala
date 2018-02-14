@@ -4,6 +4,11 @@ import TimeConstant._
 
 object Cron {
   
+  val lastSecond = 59
+  val lastMinute = 59
+  val lastHour = 23
+  
+  
    /*
     *  Only DayofWeek and DayOfMonth are ommittable parameters 
     *  in cron expressions
