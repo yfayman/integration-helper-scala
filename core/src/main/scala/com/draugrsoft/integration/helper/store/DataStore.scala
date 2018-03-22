@@ -11,9 +11,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 private [integration] object DefaultJobInstanceDataStore extends DataStore {
 
+  type JobId = Int
+  
   override implicit val configOpt = None
 
-  val mutableMap: scala.collection.mutable.Map[Int, JobInstanceData] = scala.collection.mutable.Map()
+  val mutableMap: scala.collection.mutable.Map[JobId, JobInstanceData] = scala.collection.mutable.Map()
   
   val jobInstanceIdTracker:AtomicInteger = new AtomicInteger(1)
   val schedulerIdTracker:AtomicInteger = new AtomicInteger(1)

@@ -16,14 +16,13 @@ import scala.concurrent.duration.Duration
 import com.draugrsoft.integration.helper.constants.JobStatus._
 import com.draugrsoft.integration.helper.constants.JobAction._
 
-
 class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
-    with WordSpecLike
-    with MustMatchers
-    with ImplicitSender
-   // with DefaultTimeout
-    with DebugTimeout
-    with StopSystemAfterAll {
+  with WordSpecLike
+  with MustMatchers
+  with ImplicitSender
+  // with DefaultTimeout
+  with DebugTimeout
+  with StopSystemAfterAll {
 
   import MasterIntegrationActor._
 
@@ -41,11 +40,11 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       assertResult(1)(integrationStatusOne.jobs.size)
       assertResult("test jerb")(integrationStatusOne.jobs(0).name)
 
-      Await.result(mainAct.ask(UpdateJobRequest("test jerb", JobAction(StartAction,Nil))), Duration.Inf) match {
+      Await.result(mainAct.ask(UpdateJobRequest("test jerb", JobAction(StartAction, Nil))), Duration.Inf) match {
         case UpdateJobResponse(jidOpt) if jidOpt.isDefined && jidOpt.get.start.isDefined => assert(true)
         case _ => assert(false)
       }
-      mainAct ! UpdateJobRequest("made up jerb", JobAction(StartAction,Nil))
+      mainAct ! UpdateJobRequest("made up jerb", JobAction(StartAction, Nil))
       expectMsg(UpdateJobResponse(None))
 
       // Make sure that the started job is running
@@ -53,7 +52,6 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       val integrationStatusTwo = Await.result(statusTwoFuture, Duration.Inf)
       assertResult(1)(integrationStatusTwo.jobs.size)
       assertResult("test jerb")(integrationStatusTwo.jobs(0).name)
-
 
     }
 
@@ -64,7 +62,7 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
       val statusOneFuture = mainAct.ask(IntegrationStatusRequest).mapTo[IntegrationRecentStatus]
       val integrationStatusOne = Await.result(statusOneFuture, Duration.Inf)
 
-      assertResult(2)(integrationStatusOne.jobs.size )
+      assertResult(2)(integrationStatusOne.jobs.size)
 
     }
 
@@ -125,17 +123,18 @@ class MasterIntegrationActorTest extends TestKit(ActorSystem("testsystem"))
 
       val jobStatiResponseOne = Await.result(jobStatiResponseFutureOne, Duration.Inf)
       assert(jobStatiResponseOne.data.nonEmpty)
-      jobStatiResponseOne.data.foreach(jid => {
-        assertResult(INITIALIZING)(jid.status)
-        assert(jid.start.isEmpty)
-        assert(jid.messages.isEmpty)
-        assert(jid.attributes.isEmpty)
-      })
+      
+      // Head one should be the current status
+      val headJid = jobStatiResponseOne.data.head
+      assertResult(INITIALIZING)(headJid.status)
+      assert(headJid.start.isEmpty)
+      assert(headJid.messages.isEmpty)
+      assert(headJid.attributes.isEmpty)
 
       val jobStatiResponseFutureTwo = mainAct.ask(JobStatiRequest("job that doesn't exist")).mapTo[JobStatiResponse]
       val jobStatiResponseTwo = Await.result(jobStatiResponseFutureTwo, Duration.Inf)
       assert(jobStatiResponseTwo.data.isEmpty)
-      
+
       val jobStatusResponseFuture = mainAct.ask(JobStatusRequest("test jerb")).mapTo[JobStatusResponse]
       val jobStatusResponse = Await.result(jobStatusResponseFuture, Duration.Inf)
       assert(jobStatusResponse.data.isDefined)

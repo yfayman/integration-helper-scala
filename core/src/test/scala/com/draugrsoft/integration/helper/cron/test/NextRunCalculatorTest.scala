@@ -154,7 +154,7 @@ class NextRunCalculatorTest extends WordSpec with Matchers {
       val nextMinListNoRollOver =
         NextRunCalculator.getNextMin(MinutesVal(List(5, 25, 45)), 55,
           SecondsVal(List(0, 30)), 25)
-      assertResult(55)(nextMinListNoRollOver)
+      assertResult(5)(nextMinListNoRollOver)
 
       // This will roll over because there is not a next seconds
       val nextMinListRollOver = NextRunCalculator.getNextMin(

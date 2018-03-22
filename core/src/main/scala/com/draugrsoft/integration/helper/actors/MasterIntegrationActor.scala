@@ -24,6 +24,8 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
   with ActorDispatcherExecutionContext {
 
   import MasterIntegrationActor._
+  
+  type JobName = String
 
   val log = Logging(context.system, this)
 
@@ -36,7 +38,7 @@ private[integration] class MasterIntegrationActor(integration: Integration) exte
    *
    * JobMetaData contains information regarding the client actor, mastor actor and current status
    */
-  var jobMap: Map[String, JobMetaData] = integration.jobs.map(job => {
+  var jobMap: Map[JobName, JobMetaData] = integration.jobs.map(job => {
 
     val jobMasterActor = job match {
       case JobWithProps(name, props) => context.actorOf(MasterJobActor.props(props, name, dataStoreRef))
